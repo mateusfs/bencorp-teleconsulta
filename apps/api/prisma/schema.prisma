@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ENFERMEIRO
+  MEDICO
+}
+
+enum AtendimentoStatus {
+  AGUARDANDO
+  EM_ANDAMENTO
+  FINALIZADO
+  CANCELADO
+}
+
+enum DesfechoAtendimento {
+  ENCERRADO
+  ENCAMINHADO_MEDICO
+}
+
+enum ClassificacaoRisco {
+  VERMELHO
+  LARANJA
+  AMARELO
+  VERDE
+  AZUL
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  atendimentosProfissional Atendimento[]      @relation("ProfessionalAtendimentos")
+  adendos                  ProntuarioAdendo[]
+  auditoriasLeitura        AuditoriaLeitura[]
+  patientInviteLinks       PatientInviteLink[]
+  chatMessages             ChatMessage[]
+}
+
+model Patient {
+  id        String   @id @default(uuid())
+  name      String
+  cpf       String   @unique
+  contact   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  atendimentos      Atendimento[]
+  auditoriasLeitura AuditoriaLeitura[]
+}
+
+model Atendimento {
+  id                 String               @id @default(uuid())
+  patientId          String
+  status             AtendimentoStatus    @default(AGUARDANDO)
+  riskClassification ClassificacaoRisco?
+  professionalId     String?
+  queuedAt           DateTime             @default(now())
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  desfecho           DesfechoAtendimento?
+  encaminhadoDeId    String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  patient       Patient       @relation(fields: [patientId], references: [id])
+  professional  User?         @relation("ProfessionalAtendimentos", fields: [professionalId], references: [id])
+  encaminhadoDe Atendimento?  @relation("Encaminhamentos", fields: [encaminhadoDeId], references: [id])
+  encaminhados  Atendimento[] @relation("Encaminhamentos")
+  prontuario    Prontuario?
+  inviteLinks   PatientInviteLink[]
+  chatMessages  ChatMessage[]
+
+  @@index([status, queuedAt])
+  @@index([professionalId, status])
+}
+
+model Prontuario {
+  id                 String              @id @default(uuid())
+  atendimentoId      String              @unique
+  queixa             String              @default("")
+  anamnese           String              @default("")
+  conduta            String              @default("")
+  prescricao         String              @default("")
+  complementoMedico  String              @default("")
+  paSistolica        Int?
+  paDiastolica       Int?
+  fc                 Int?
+  temperatura        Float?
+  spo2               Int?
+  riskClassification ClassificacaoRisco?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  atendimento Atendimento       @relation(fields: [atendimentoId], references: [id])
+  adendos     ProntuarioAdendo[]
+  auditorias  AuditoriaLeitura[]
+}
+
+model ProntuarioAdendo {
+  id           String   @id @default(uuid())
+  prontuarioId String
+  authorId     String
+  texto        String
+  createdAt    DateTime @default(now())
+
+  prontuario Prontuario @relation(fields: [prontuarioId], references: [id])
+  author     User       @relation(fields: [authorId], references: [id])
+
+  @@index([prontuarioId, createdAt])
+}
+
+model AuditoriaLeitura {
+  id           String   @id @default(uuid())
+  prontuarioId String
+  patientId    String
+  userId       String
+  endpoint     String
+  createdAt    DateTime @default(now())
+
+  prontuario Prontuario @relation(fields: [prontuarioId], references: [id])
+  patient    Patient    @relation(fields: [patientId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@index([prontuarioId, createdAt])
+  @@index([patientId, createdAt])
+}
+
+enum ChatAuthorKind {
+  PROFISSIONAL
+  PACIENTE
+}
+
+model PatientInviteLink {
+  id              String    @id @default(uuid())
+  atendimentoId   String
+  tokenHash       String    @unique
+  expiresAt       DateTime
+  usedAt          DateTime?
+  revokedAt       DateTime?
+  createdByUserId String
+  createdAt       DateTime  @default(now())
+
+  atendimento Atendimento @relation(fields: [atendimentoId], references: [id])
+  createdBy   User        @relation(fields: [createdByUserId], references: [id])
+
+  @@index([atendimentoId])
+}
+
+model ChatMessage {
+  id            String         @id @default(uuid())
+  atendimentoId String
+  authorKind    ChatAuthorKind
+  authorUserId  String?
+  body          String
+  createdAt     DateTime       @default(now())
+
+  atendimento Atendimento @relation(fields: [atendimentoId], references: [id])
+  author      User?       @relation(fields: [authorUserId], references: [id])
+
+  @@index([atendimentoId, createdAt])
+}

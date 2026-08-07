@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bencorp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bencorp}
+      POSTGRES_DB: ${POSTGRES_DB:-bencorp}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bencorp} -d ${POSTGRES_DB:-bencorp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  livekit:
+    image: livekit/livekit-server:v1.8.4
+    command: ["--dev", "--bind", "0.0.0.0"]
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bencorp}:${POSTGRES_PASSWORD:-bencorp}@postgres:5432/${POSTGRES_DB:-bencorp}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-long-secret}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      API_PORT: 3000
+      PERSISTENCE_MODE: ${PERSISTENCE_MODE:-postgres}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:5173}
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
