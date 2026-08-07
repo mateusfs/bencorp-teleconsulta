@@ -1,0 +1,23 @@
+{
+  "name": "bencorp-teleconsulta",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "build": "npm run build -w api && npm run build -w web",
+    "build:api": "npm run build -w api",
+    "build:web": "npm run build -w web",
+    "dev:api": "npm run start:dev -w api",
+    "dev:web": "npm run dev -w web",
+    "test": "npm run test -w api",
+    "test:cov": "npm run test:cov -w api",
+    "lint": "npm run lint -w api",
+    "prisma:migrate": "npm run prisma:migrate -w api",
+    "prisma:seed": "npm run prisma:seed -w api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
