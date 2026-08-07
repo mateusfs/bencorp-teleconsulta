@@ -32,7 +32,6 @@ import {
   resolvePersistenceMode,
   usesMemoryStore,
 } from '@/externals/database/persistence-mode';
-import { FakeVideoRoomProvider } from '@/externals/telepresenca/fake-video-room.provider';
 import { LiveKitRoomTokenRevoker } from '@/externals/telepresenca/livekit-room-token-revoker';
 import { LiveKitVideoRoomProvider } from '@/externals/telepresenca/livekit-video-room.provider';
 import { MemoryRoomTokenRevoker } from '@/externals/telepresenca/memory-room-token-revoker';
@@ -67,7 +66,7 @@ export function buildPersistenceProviders(): Provider[] {
         useClass: MemoryChatMessageRepository,
       },
       { provide: ROOM_TOKEN_REVOKER, useClass: MemoryRoomTokenRevoker },
-      { provide: VIDEO_ROOM_PROVIDER, useClass: FakeVideoRoomProvider },
+      { provide: VIDEO_ROOM_PROVIDER, useClass: LiveKitVideoRoomProvider },
     );
 
     if (mode === 'write-behind') {

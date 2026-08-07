@@ -74,6 +74,7 @@ export class SalaController {
     return this.listarChat.execute({
       atendimentoId: id,
       role: user.role,
+      professionalUserId: user.userId,
     });
   }
 }

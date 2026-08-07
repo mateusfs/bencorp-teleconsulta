@@ -1,4 +1,4 @@
-const CACHE = 'bencorp-shell-v1';
+const CACHE = 'bencorp-shell-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg'];
 
 self.addEventListener('install', (event) => {

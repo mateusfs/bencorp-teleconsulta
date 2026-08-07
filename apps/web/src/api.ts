@@ -59,8 +59,12 @@ async function request<T>(
   if (!response.ok) {
     let message = `Erro HTTP ${response.status}`;
     try {
-      const body = (await response.json()) as { message?: string };
-      if (body.message) {
+      const body = (await response.json()) as {
+        message?: string | string[];
+      };
+      if (Array.isArray(body.message)) {
+        message = body.message.join(', ');
+      } else if (typeof body.message === 'string' && body.message.length > 0) {
         message = body.message;
       }
     } catch {
@@ -379,6 +383,8 @@ export type PacienteDetalhe = {
     atendimentoId: string;
     patientId: string;
     queixa: string;
+    anamnese: string;
+    conduta: string;
     paSistolica: number | null;
     paDiastolica: number | null;
     fc: number | null;

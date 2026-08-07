@@ -15,6 +15,7 @@ import type {
   ClassificacaoRisco,
   PeriodoFila,
 } from '../api';
+import { labelRisco, labelStatus } from '../labels';
 
 function formatWait(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -236,8 +237,8 @@ export function FilaAtendimentoPage() {
               <tr key={item.id}>
                 <td>{item.patientName}</td>
                 <td>{item.patientContact}</td>
-                <td>{item.riskClassification ?? '—'}</td>
-                <td>{item.status}</td>
+                <td>{labelRisco(item.riskClassification)}</td>
+                <td>{labelStatus(item.status)}</td>
                 <td>{new Date(item.queuedAt).toLocaleString('pt-BR')}</td>
                 <td>{formatWait(item.tempoEsperaSegundos)}</td>
                 <td className="actions">

@@ -50,10 +50,31 @@ describe('Chat sala use cases', () => {
     const rows = await listar.execute({
       atendimentoId: 'at-1',
       role: UserRole.ENFERMEIRO,
+      professionalUserId: 'prof-1',
     });
     expect(rows).toHaveLength(2);
     expect(rows[0]?.authorKind).toBe('PROFISSIONAL');
     expect(rows[1]?.authorKind).toBe('PACIENTE');
+  });
+
+  it('outro profissional não lê nem envia chat (anti-IDOR)', async () => {
+    const { listar, enviar } = setup();
+    await expect(
+      listar.execute({
+        atendimentoId: 'at-1',
+        role: UserRole.MEDICO,
+        professionalUserId: 'prof-outro',
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+
+    await expect(
+      enviar.execute({
+        atendimentoId: 'at-1',
+        body: 'intruso',
+        professionalUserId: 'prof-outro',
+        role: UserRole.MEDICO,
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it('recusa mensagem vazia e mismatch de atendimento do paciente', async () => {
@@ -105,6 +126,7 @@ describe('Chat sala use cases', () => {
       listar.execute({
         atendimentoId: 'at-1',
         role: UserRole.ADMIN,
+        professionalUserId: 'admin',
       }),
     ).rejects.toBeInstanceOf(ForbiddenError);
 
@@ -119,6 +141,7 @@ describe('Chat sala use cases', () => {
       listar.execute({
         atendimentoId: 'missing',
         role: UserRole.ENFERMEIRO,
+        professionalUserId: 'prof-1',
       }),
     ).rejects.toBeInstanceOf(NotFoundError);
 

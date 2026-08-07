@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import {
@@ -9,6 +9,7 @@ import {
 
 @Injectable()
 export class LiveKitVideoRoomProvider implements VideoRoomProvider {
+  private readonly logger = new Logger(LiveKitVideoRoomProvider.name);
   private readonly apiKey: string;
   private readonly apiSecret: string;
   private readonly wsUrl: string;
@@ -54,8 +55,12 @@ export class LiveKitVideoRoomProvider implements VideoRoomProvider {
     );
     try {
       await client.deleteRoom(roomName);
-    } catch {
-      return;
+    } catch (error: unknown) {
+      const detail =
+        error instanceof Error ? error.message : 'erro desconhecido';
+      this.logger.warn(
+        `Falha ao revogar sala LiveKit (best-effort) room=${roomName}: ${detail}`,
+      );
     }
   }
 

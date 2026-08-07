@@ -14,6 +14,8 @@ export type ProntuarioHistoricoResumo = {
   atendimentoId: string;
   patientId: string;
   queixa: string;
+  anamnese: string;
+  conduta: string;
   paSistolica: number | null;
   paDiastolica: number | null;
   fc: number | null;
@@ -38,6 +40,8 @@ export function toProntuarioHistoricoResumo(
     atendimentoId: prontuario.atendimentoId,
     patientId: prontuario.patientId,
     queixa: prontuario.queixa,
+    anamnese: prontuario.anamnese,
+    conduta: prontuario.conduta,
     paSistolica: prontuario.paSistolica,
     paDiastolica: prontuario.paDiastolica,
     fc: prontuario.fc,

@@ -80,6 +80,8 @@ export class ChatGateway implements OnGatewayConnection {
     const messages = await this.listar.execute({
       atendimentoId: body.atendimentoId,
       role: auth.kind === 'professional' ? auth.role : undefined,
+      professionalUserId:
+        auth.kind === 'professional' ? auth.userId : undefined,
       patientAtendimentoId:
         auth.kind === 'patient' ? auth.atendimentoId : undefined,
     });

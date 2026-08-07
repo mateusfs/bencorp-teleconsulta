@@ -49,6 +49,7 @@ export function PacienteSalaPage() {
               atendimentoId={session.atendimentoId}
               accessToken={session.patientAccessToken}
               enabled
+              perspective="PACIENTE"
             />
           </section>
         </div>
