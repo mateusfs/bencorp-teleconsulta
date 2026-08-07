@@ -15,6 +15,7 @@ import {
   DesfechoAtendimento,
 } from '@/entities/atendimento';
 import { normalizeCpf, periodoToQueuedAtRange } from '@/entities/periodo-fila';
+import { DEFAULT_LIST_LIMIT } from '@/app/contracts/list-limits';
 
 type Stored = Atendimento & {
   patientName: string;
@@ -57,13 +58,15 @@ export class InMemoryAtendimentoRepository implements AtendimentoRepository {
       );
     }
 
-    return list.map((item) => ({
-      ...item,
-      tempoEsperaSegundos: Math.max(
-        0,
-        Math.floor((now.getTime() - item.queuedAt.getTime()) / 1000),
-      ),
-    }));
+    return list
+      .map((item) => ({
+        ...item,
+        tempoEsperaSegundos: Math.max(
+          0,
+          Math.floor((now.getTime() - item.queuedAt.getTime()) / 1000),
+        ),
+      }))
+      .slice(0, filters.limit ?? DEFAULT_LIST_LIMIT);
   }
 
   async findById(id: string): Promise<Atendimento | null> {

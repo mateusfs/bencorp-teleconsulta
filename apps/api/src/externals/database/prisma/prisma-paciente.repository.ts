@@ -20,6 +20,7 @@ import {
 import { Paciente } from '@/entities/paciente';
 import { Prontuario } from '@/entities/prontuario';
 import { normalizeCpf } from '@/entities/periodo-fila';
+import { DEFAULT_LIST_LIMIT } from '@/app/contracts/list-limits';
 import { PrismaService } from './prisma.service';
 
 type ProntuarioRow = PrismaProntuario & { adendos: PrismaAdendo[] };
@@ -106,6 +107,7 @@ export class PrismaPacienteRepository implements PacienteRepository {
     const rows = await this.prisma.patient.findMany({
       where,
       orderBy: { name: 'asc' },
+      take: filters.limit ?? DEFAULT_LIST_LIMIT,
     });
     return rows.map((row) => ({
       id: row.id,

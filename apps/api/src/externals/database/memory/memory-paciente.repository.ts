@@ -7,6 +7,7 @@ import { Atendimento } from '@/entities/atendimento';
 import { Paciente } from '@/entities/paciente';
 import { Prontuario } from '@/entities/prontuario';
 import { normalizeCpf } from '@/entities/periodo-fila';
+import { DEFAULT_LIST_LIMIT } from '@/app/contracts/list-limits';
 import { MemoryStore } from './memory-store';
 
 @Injectable()
@@ -26,7 +27,9 @@ export class MemoryPacienteRepository implements PacienteRepository {
       );
     }
     rows.sort((a, b) => a.name.localeCompare(b.name));
-    return Promise.resolve(rows.map((p) => ({ ...p })));
+    return Promise.resolve(
+      rows.slice(0, filters.limit ?? DEFAULT_LIST_LIMIT).map((p) => ({ ...p })),
+    );
   }
 
   findById(id: string): Promise<Paciente | null> {

@@ -13,6 +13,7 @@ import {
   EnviarMensagemChatUseCase,
   ListarMensagensChatUseCase,
 } from '@/app/use-cases/chat-sala';
+import { ForbiddenError } from '@/entities/errors/domain-error';
 import { UserRole } from '@/entities/user-role';
 
 type SocketAuth = {
@@ -135,7 +136,7 @@ export class ChatGateway implements OnGatewayConnection {
 
   private assertAccess(auth: SocketAuth, atendimentoId: string): void {
     if (auth.kind === 'patient' && auth.atendimentoId !== atendimentoId) {
-      throw new Error('mismatch');
+      throw new ForbiddenError('Link não pertence a este atendimento');
     }
   }
 

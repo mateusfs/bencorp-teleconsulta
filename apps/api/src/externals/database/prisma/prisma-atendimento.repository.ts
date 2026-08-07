@@ -21,6 +21,7 @@ import {
   DesfechoAtendimento,
 } from '@/entities/atendimento';
 import { normalizeCpf, periodoToQueuedAtRange } from '@/entities/periodo-fila';
+import { DEFAULT_LIST_LIMIT } from '@/app/contracts/list-limits';
 import { PrismaService } from './prisma.service';
 
 type RowWithPatient = PrismaAtendimento & {
@@ -111,6 +112,7 @@ export class PrismaAtendimentoRepository implements AtendimentoRepository {
       where,
       include: { patient: true },
       orderBy: [{ status: 'asc' }, { queuedAt: 'asc' }],
+      take: filters.limit ?? DEFAULT_LIST_LIMIT,
     });
 
     return rows.map((row) => toFilaItem(row, now));

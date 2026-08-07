@@ -374,7 +374,20 @@ export type PacienteAtendimentoResumo = {
 export type PacienteDetalhe = {
   paciente: PacienteResumo;
   atendimentos: PacienteAtendimentoResumo[];
-  prontuarios: Prontuario[];
+  prontuarios: Array<{
+    id: string;
+    atendimentoId: string;
+    patientId: string;
+    queixa: string;
+    paSistolica: number | null;
+    paDiastolica: number | null;
+    fc: number | null;
+    temperatura: number | null;
+    spo2: number | null;
+    riskClassification: ClassificacaoRisco | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 };
 
 export function listPacientes(params: {

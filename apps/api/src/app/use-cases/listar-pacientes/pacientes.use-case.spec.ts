@@ -167,6 +167,8 @@ describe('Pacientes use cases (Épico F)', () => {
     expect(detail.atendimentos).toHaveLength(1);
     expect(detail.prontuarios).toHaveLength(2);
     expect(detail.prontuarios[0]?.paSistolica).toBe(120);
+    expect(detail.prontuarios[0]).not.toHaveProperty('anamnese');
+    expect(detail.prontuarios[0]).not.toHaveProperty('adendos');
     expect(auditorias.rows).toHaveLength(2);
     expect(auditorias.rows.map((r) => r.prontuarioId).sort()).toEqual([
       'pr-1',
