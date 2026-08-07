@@ -366,24 +366,24 @@ Cada item traz **Aceite** mensurável.
 
 ### Épico G — PWA & Qualidade
 
-- [ ] **CX-090** — PWA mínima: `manifest` + service worker (cache de shell)
+- [x] **CX-090** — PWA mínima: `manifest` + service worker (cache de shell)
   - **Aceite:** Lighthouse/installability básica; app instalável
   - **BC:** transversal
   - **Nota:** sem cache offline de PHI/dados clínicos
 
-- [ ] **CX-091** — Testes automatizados das regras críticas (409, 422, 403, imutabilidade, auditoria, tokens)
+- [x] **CX-091** — Testes automatizados das regras críticas (409, 422, 403, imutabilidade, auditoria, tokens)
   - **Aceite:** suite verde; cobertura ≥ 80% nos módulos de regras de domínio
   - **BC:** Atendimento, Prontuario, Telepresenca, Auditoria
 
-- [ ] **CX-092** — Testes de autorização negativos (IDOR, ADMIN clínico, link cruzado)
+- [x] **CX-092** — Testes de autorização negativos (IDOR, ADMIN clínico, link cruzado)
   - **Aceite:** cenários 403/409/422 documentados e passando
   - **BC:** IdentityAccess + cores
 
-- [ ] **CX-093** — Tipagem estrita e ESLint limpo (sem `any`, sem disable)
+- [x] **CX-093** — Tipagem estrita e ESLint limpo (sem `any`, sem disable)
   - **Aceite:** CI/local lint + tsc sem erros
   - **BC:** transversal
 
-- [ ] **CX-094** — Observabilidade mínima (logs de authz negada e claim 409)
+- [x] **CX-094** — Observabilidade mínima (logs de authz negada e claim 409)
   - **Aceite:** tentativas negadas aparecem em log estruturado
   - **BC:** transversal
 
@@ -597,10 +597,10 @@ sequenceDiagram
 | D Prontuário | CX-040–CX-049 (10) | 10 |
 | E Telepresença | CX-060–CX-071 (12) | 12 |
 | F Pacientes | CX-080–CX-085 (6) | 6 |
-| G PWA & Qualidade | CX-090–CX-094 (5) | 0 |
+| G PWA & Qualidade | CX-090–CX-094 (5) | 5 |
 | H Entrega | CX-100–CX-106 (7) | 1 |
 | I Memória / demo | CX-110–CX-116 (7) | 7 |
-| **Total** | **82** | **71** |
+| **Total** | **82** | **76** |
 
 Atualizar checkboxes e a coluna “Feitos” conforme a implementação avançar item a item.
 

@@ -101,5 +101,5 @@ Na raiz:
 - Modo `memory` é **volátil** (reinício zera dados) e não substitui Postgres na entrega oficial.
 - Write-behind não garante durabilidade se o processo cair antes do flush.
 - LiveKit em modo `--dev` no Compose; keys `devkey`/`secret` só para ambiente local.
-- PWA e módulo Pacientes (épicos F–G) ainda pendentes.
+- PWA cacheia apenas o shell estático (`sw.js`); **não** cacheia API, PHI nem tokens.
 - ADRs em [docs/architecture/adrs/](docs/architecture/adrs/).

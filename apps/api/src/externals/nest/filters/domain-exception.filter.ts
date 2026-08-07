@@ -5,7 +5,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
   ConflictError,
   DomainError,
@@ -16,6 +16,12 @@ import {
   UnprocessableStateError,
   ValidationError,
 } from '@/entities/errors/domain-error';
+import { AuthPrincipal } from '@/externals/nest/security/authenticated-user';
+
+type RequestWithContext = Request & {
+  user?: AuthPrincipal;
+  requestId?: string;
+};
 
 @Catch(DomainError)
 export class DomainExceptionFilter implements ExceptionFilter {
@@ -24,13 +30,26 @@ export class DomainExceptionFilter implements ExceptionFilter {
   catch(exception: DomainError, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<RequestWithContext>();
     const status = this.toStatus(exception);
+    const event = this.toEvent(exception);
+    const userId =
+      request.user?.kind === 'professional'
+        ? request.user.userId
+        : request.user?.kind === 'patient'
+          ? request.user.patientId
+          : null;
 
     this.logger.warn(
       JSON.stringify({
+        event,
         code: exception.code,
         message: exception.message,
         status,
+        requestId: request.requestId ?? null,
+        method: request.method,
+        path: request.path,
+        userId,
       }),
     );
 
@@ -39,6 +58,30 @@ export class DomainExceptionFilter implements ExceptionFilter {
       code: exception.code,
       message: exception.message,
     });
+  }
+
+  private toEvent(error: DomainError): string {
+    if (error instanceof ForbiddenError) {
+      return 'authz_denied';
+    }
+    if (error instanceof ConflictError) {
+      const message = error.message.toLowerCase();
+      if (
+        message.includes('já iniciado') ||
+        message.includes('em_andamento') ||
+        message.includes('em andamento')
+      ) {
+        return 'claim_conflict';
+      }
+      return 'conflict';
+    }
+    if (error instanceof UnauthorizedError) {
+      return 'auth_unauthorized';
+    }
+    if (error instanceof UnprocessableStateError) {
+      return 'invalid_state_transition';
+    }
+    return 'domain_error';
   }
 
   private toStatus(error: DomainError): number {
