@@ -1,6 +1,7 @@
 import {
   ConflictError,
   ForbiddenError,
+  GoneError,
   NotFoundError,
   UnauthorizedError,
   UnprocessableStateError,
@@ -15,5 +16,6 @@ describe('DomainError hierarchy', () => {
     expect(new ConflictError().code).toBe('CONFLICT');
     expect(new UnprocessableStateError().code).toBe('UNPROCESSABLE');
     expect(new ValidationError().code).toBe('VALIDATION');
+    expect(new GoneError().code).toBe('GONE');
   });
 });

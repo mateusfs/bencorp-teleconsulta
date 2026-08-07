@@ -17,7 +17,9 @@ import {
 } from '@/entities/atendimento';
 import {
   ForbiddenError,
+  NotFoundError,
   UnprocessableStateError,
+  ValidationError,
 } from '@/entities/errors/domain-error';
 import { UserRole } from '@/entities/user-role';
 
@@ -185,5 +187,61 @@ describe('Prontuário use cases', () => {
         data: { queixa: 'Hack' },
       }),
     ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it('adendo: ADMIN, texto vazio, não finalizado e sem prontuário', async () => {
+    const { atendimentos, prontuarios, atendimento } = setupEmAndamento();
+    const adendo = new CriarAdendoProntuarioUseCase(atendimentos, prontuarios);
+
+    await expect(
+      adendo.execute({
+        atendimentoId: atendimento.id,
+        userId: professionalId,
+        role: UserRole.ADMIN,
+        texto: 'x',
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+
+    await expect(
+      adendo.execute({
+        atendimentoId: atendimento.id,
+        userId: professionalId,
+        role: UserRole.ENFERMEIRO,
+        texto: '   ',
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    await expect(
+      adendo.execute({
+        atendimentoId: atendimento.id,
+        userId: professionalId,
+        role: UserRole.ENFERMEIRO,
+        texto: 'cedo',
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableStateError);
+
+    await expect(
+      adendo.execute({
+        atendimentoId: 'missing',
+        userId: professionalId,
+        role: UserRole.ENFERMEIRO,
+        texto: 'x',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+
+    await atendimentos.finalize({
+      id: atendimento.id,
+      desfecho: DesfechoAtendimento.ENCERRADO,
+      finishedAt: new Date(),
+    });
+
+    await expect(
+      adendo.execute({
+        atendimentoId: atendimento.id,
+        userId: professionalId,
+        role: UserRole.ENFERMEIRO,
+        texto: 'sem prontuario',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

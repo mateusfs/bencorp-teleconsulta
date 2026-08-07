@@ -32,7 +32,10 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-long-secret}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
       API_PORT: 3000
+      PERSISTENCE_MODE: ${PERSISTENCE_MODE:-postgres}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:-http://localhost:5173}
       LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_PUBLIC_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
     ports:

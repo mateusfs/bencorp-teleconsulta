@@ -8,10 +8,10 @@ import {
 import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { Observable, tap } from 'rxjs';
-import { AuthenticatedUser } from '@/externals/nest/security/authenticated-user';
+import { AuthPrincipal } from '@/externals/nest/security/authenticated-user';
 
 type RequestWithUser = Request & {
-  user?: AuthenticatedUser;
+  user?: AuthPrincipal;
   requestId?: string;
 };
 
@@ -31,12 +31,17 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const started = Date.now();
     return next.handle().pipe(
       tap(() => {
-        const userId = request.user?.userId;
+        const userId =
+          request.user?.kind === 'professional'
+            ? request.user.userId
+            : request.user?.kind === 'patient'
+              ? request.user.patientId
+              : null;
         this.logger.log(
           JSON.stringify({
             requestId,
             method: request.method,
-            path: request.originalUrl,
+            path: request.path,
             statusCode: response.statusCode,
             durationMs: Date.now() - started,
             userId: userId ?? null,

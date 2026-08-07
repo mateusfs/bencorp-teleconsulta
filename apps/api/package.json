@@ -26,14 +26,18 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "^11.1.28",
+    "@nestjs/websockets": "^11.1.28",
     "@prisma/client": "^6.14.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "livekit-server-sdk": "^2.17.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -64,7 +68,11 @@
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
@@ -78,7 +86,9 @@
       "entities/atendimento.ts",
       "entities/periodo-fila.ts",
       "entities/prontuario.ts",
+      "entities/sala.ts",
       "entities/errors/**/*.ts",
+      "externals/database/persistence-mode.ts",
       "externals/nest/security/roles.guard.ts",
       "!**/__tests__/**",
       "!**/*.spec.ts",

@@ -45,6 +45,8 @@ model User {
   atendimentosProfissional Atendimento[]      @relation("ProfessionalAtendimentos")
   adendos                  ProntuarioAdendo[]
   auditoriasLeitura        AuditoriaLeitura[]
+  patientInviteLinks       PatientInviteLink[]
+  chatMessages             ChatMessage[]
 }
 
 model Patient {
@@ -78,6 +80,8 @@ model Atendimento {
   encaminhadoDe Atendimento?  @relation("Encaminhamentos", fields: [encaminhadoDeId], references: [id])
   encaminhados  Atendimento[] @relation("Encaminhamentos")
   prontuario    Prontuario?
+  inviteLinks   PatientInviteLink[]
+  chatMessages  ChatMessage[]
 
   @@index([status, queuedAt])
   @@index([professionalId, status])
@@ -132,4 +136,39 @@ model AuditoriaLeitura {
 
   @@index([prontuarioId, createdAt])
   @@index([patientId, createdAt])
+}
+
+enum ChatAuthorKind {
+  PROFISSIONAL
+  PACIENTE
+}
+
+model PatientInviteLink {
+  id              String    @id @default(uuid())
+  atendimentoId   String
+  tokenHash       String    @unique
+  expiresAt       DateTime
+  usedAt          DateTime?
+  revokedAt       DateTime?
+  createdByUserId String
+  createdAt       DateTime  @default(now())
+
+  atendimento Atendimento @relation(fields: [atendimentoId], references: [id])
+  createdBy   User        @relation(fields: [createdByUserId], references: [id])
+
+  @@index([atendimentoId])
+}
+
+model ChatMessage {
+  id            String         @id @default(uuid())
+  atendimentoId String
+  authorKind    ChatAuthorKind
+  authorUserId  String?
+  body          String
+  createdAt     DateTime       @default(now())
+
+  atendimento Atendimento @relation(fields: [atendimentoId], references: [id])
+  author      User?       @relation(fields: [authorUserId], references: [id])
+
+  @@index([atendimentoId, createdAt])
 }

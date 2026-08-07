@@ -93,4 +93,9 @@ export const fixedTokenService: TokenService = {
       accessToken: 'token-test',
       expiresIn: '8h',
     }),
+  signPatient: () =>
+    Promise.resolve({
+      accessToken: 'patient-token-test',
+      expiresIn: '900s',
+    }),
 };

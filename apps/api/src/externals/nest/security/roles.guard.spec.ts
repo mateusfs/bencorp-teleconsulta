@@ -10,7 +10,16 @@ function mockContext(role?: UserRole): ExecutionContext {
     getClass: () => ({}),
     switchToHttp: () => ({
       getRequest: () =>
-        role ? { user: { userId: '1', email: 'x@y.z', role } } : {},
+        role
+          ? {
+              user: {
+                kind: 'professional' as const,
+                userId: '1',
+                email: 'x@y.z',
+                role,
+              },
+            }
+          : {},
     }),
   } as unknown as ExecutionContext;
 }

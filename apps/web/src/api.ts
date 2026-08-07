@@ -64,7 +64,7 @@ async function request<T>(
         message = body.message;
       }
     } catch {
-      // ignore
+      message = `Erro HTTP ${response.status}`;
     }
     throw new Error(message);
   }
@@ -270,4 +270,122 @@ export function createAdendoProntuario(
       body: JSON.stringify({ texto }),
     },
   );
+}
+
+export type VideoAccessToken = {
+  token: string;
+  url: string;
+  expiresInSeconds: number;
+};
+
+export type PatientInviteLinkResponse = {
+  inviteUrl: string;
+  expiresAt: string;
+};
+
+export type ResgatarLinkResponse = {
+  patientAccessToken: string;
+  expiresIn: string;
+  atendimentoId: string;
+  video: VideoAccessToken;
+};
+
+export function emitirTokenSala(
+  atendimentoId: string,
+): Promise<VideoAccessToken> {
+  return request<VideoAccessToken>(
+    `/atendimentos/${atendimentoId}/sala/token`,
+    { method: 'POST' },
+  );
+}
+
+export function criarLinkPaciente(
+  atendimentoId: string,
+): Promise<PatientInviteLinkResponse> {
+  return request<PatientInviteLinkResponse>(
+    `/atendimentos/${atendimentoId}/sala/link-paciente`,
+    { method: 'POST' },
+  );
+}
+
+export async function resgatarLinkPaciente(
+  rawToken: string,
+): Promise<ResgatarLinkResponse> {
+  const response = await fetch(
+    `${API_URL}/sala/links/${encodeURIComponent(rawToken)}/resgatar`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    },
+  );
+  if (!response.ok) {
+    let message = `Erro HTTP ${response.status}`;
+    try {
+      const body = (await response.json()) as { message?: string };
+      if (body.message) {
+        message = body.message;
+      }
+    } catch {
+      message = `Erro HTTP ${response.status}`;
+    }
+    throw new Error(message);
+  }
+  return (await response.json()) as ResgatarLinkResponse;
+}
+
+export type HealthResponse = {
+  status: string;
+  persistenceMode: 'memory' | 'write-behind' | 'postgres';
+  databaseConnected: boolean;
+};
+
+export function fetchHealth(): Promise<HealthResponse> {
+  return fetch(`${API_URL}/health`).then(async (response) => {
+    if (!response.ok) {
+      throw new Error(`Health HTTP ${response.status}`);
+    }
+    return (await response.json()) as HealthResponse;
+  });
+}
+
+export type PacienteResumo = {
+  id: string;
+  name: string;
+  cpf: string;
+  contact: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PacienteAtendimentoResumo = {
+  id: string;
+  patientId: string;
+  status: AtendimentoStatus;
+  riskClassification: ClassificacaoRisco | null;
+  professionalId: string | null;
+  queuedAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  desfecho: 'ENCERRADO' | 'ENCAMINHADO_MEDICO' | null;
+  encaminhadoDeId: string | null;
+};
+
+export type PacienteDetalhe = {
+  paciente: PacienteResumo;
+  atendimentos: PacienteAtendimentoResumo[];
+  prontuarios: Prontuario[];
+};
+
+export function listPacientes(params: {
+  q?: string;
+} = {}): Promise<PacienteResumo[]> {
+  const search = new URLSearchParams();
+  if (params.q) search.set('q', params.q);
+  const qs = search.toString();
+  return request<PacienteResumo[]>(`/pacientes${qs ? `?${qs}` : ''}`);
+}
+
+export function getPacienteDetalhe(id: string): Promise<PacienteDetalhe> {
+  return request<PacienteDetalhe>(`/pacientes/${id}`);
 }

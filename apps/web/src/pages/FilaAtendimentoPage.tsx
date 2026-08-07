@@ -109,6 +109,7 @@ export function FilaAtendimentoPage() {
         <h1>Fila de Pronto Atendimento</h1>
         <div className="row gap">
           <Link to="/">Início</Link>
+          <Link to="/pacientes">Pacientes</Link>
           <button
             type="button"
             onClick={() => {

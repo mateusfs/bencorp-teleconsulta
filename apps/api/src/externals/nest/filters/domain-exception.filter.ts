@@ -10,6 +10,7 @@ import {
   ConflictError,
   DomainError,
   ForbiddenError,
+  GoneError,
   NotFoundError,
   UnauthorizedError,
   UnprocessableStateError,
@@ -58,6 +59,9 @@ export class DomainExceptionFilter implements ExceptionFilter {
     }
     if (error instanceof ValidationError) {
       return HttpStatus.BAD_REQUEST;
+    }
+    if (error instanceof GoneError) {
+      return HttpStatus.GONE;
     }
     return HttpStatus.BAD_REQUEST;
   }

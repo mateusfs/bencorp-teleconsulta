@@ -8,6 +8,11 @@ export type AccessTokenClaims = {
   role: UserRole;
 };
 
+export type PatientTokenClaims = {
+  sub: string;
+  atendimentoId: string;
+};
+
 export type IssuedToken = {
   accessToken: string;
   expiresIn: string;
@@ -15,4 +20,8 @@ export type IssuedToken = {
 
 export interface TokenService {
   sign(claims: AccessTokenClaims): Promise<IssuedToken>;
+  signPatient(
+    claims: PatientTokenClaims,
+    expiresInSeconds: number,
+  ): Promise<IssuedToken>;
 }

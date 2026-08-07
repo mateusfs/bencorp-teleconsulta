@@ -43,3 +43,9 @@ export class ValidationError extends DomainError {
     super(message, 'VALIDATION');
   }
 }
+
+export class GoneError extends DomainError {
+  constructor(message = 'Recurso indisponível') {
+    super(message, 'GONE');
+  }
+}

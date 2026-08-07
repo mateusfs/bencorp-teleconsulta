@@ -1,0 +1,106 @@
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  ATENDIMENTO_REPOSITORY,
+  AtendimentoRepository,
+} from '@/app/contracts/atendimento.repository';
+import {
+  CHAT_MESSAGE_REPOSITORY,
+  ChatMessageRepository,
+} from '@/app/contracts/chat-message.repository';
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from '@/entities/errors/domain-error';
+import { assertRoomActive, ChatMessage } from '@/entities/sala';
+import { isClinicalRole, UserRole } from '@/entities/user-role';
+
+@Injectable()
+export class ListarMensagensChatUseCase {
+  constructor(
+    @Inject(ATENDIMENTO_REPOSITORY)
+    private readonly atendimentos: AtendimentoRepository,
+    @Inject(CHAT_MESSAGE_REPOSITORY)
+    private readonly messages: ChatMessageRepository,
+  ) {}
+
+  async execute(input: {
+    atendimentoId: string;
+    role?: UserRole;
+    patientAtendimentoId?: string;
+  }): Promise<ChatMessage[]> {
+    if (input.patientAtendimentoId) {
+      if (input.patientAtendimentoId !== input.atendimentoId) {
+        throw new ForbiddenError('Link não pertence a este atendimento');
+      }
+    } else if (!input.role || !isClinicalRole(input.role)) {
+      throw new ForbiddenError('Perfil sem acesso ao chat');
+    }
+
+    const atendimento = await this.atendimentos.findById(input.atendimentoId);
+    if (!atendimento) {
+      throw new NotFoundError('Atendimento não encontrado');
+    }
+
+    assertRoomActive(atendimento.status);
+    return this.messages.listByAtendimento(input.atendimentoId);
+  }
+}
+
+@Injectable()
+export class EnviarMensagemChatUseCase {
+  constructor(
+    @Inject(ATENDIMENTO_REPOSITORY)
+    private readonly atendimentos: AtendimentoRepository,
+    @Inject(CHAT_MESSAGE_REPOSITORY)
+    private readonly messages: ChatMessageRepository,
+  ) {}
+
+  async execute(input: {
+    atendimentoId: string;
+    body: string;
+    professionalUserId?: string;
+    role?: UserRole;
+    patientAtendimentoId?: string;
+  }): Promise<ChatMessage> {
+    const body = input.body.trim();
+    if (!body) {
+      throw new ValidationError('Mensagem vazia');
+    }
+
+    if (input.patientAtendimentoId) {
+      if (input.patientAtendimentoId !== input.atendimentoId) {
+        throw new ForbiddenError('Link não pertence a este atendimento');
+      }
+    } else if (
+      !input.professionalUserId ||
+      !input.role ||
+      !isClinicalRole(input.role)
+    ) {
+      throw new ForbiddenError('Perfil sem acesso ao chat');
+    }
+
+    const atendimento = await this.atendimentos.findById(input.atendimentoId);
+    if (!atendimento) {
+      throw new NotFoundError('Atendimento não encontrado');
+    }
+
+    assertRoomActive(atendimento.status);
+
+    if (input.patientAtendimentoId) {
+      return this.messages.create({
+        atendimentoId: input.atendimentoId,
+        authorKind: 'PACIENTE',
+        authorUserId: null,
+        body,
+      });
+    }
+
+    return this.messages.create({
+      atendimentoId: input.atendimentoId,
+      authorKind: 'PROFISSIONAL',
+      authorUserId: input.professionalUserId ?? null,
+      body,
+    });
+  }
+}

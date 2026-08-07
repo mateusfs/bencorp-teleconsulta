@@ -214,12 +214,12 @@ Cada item traz **Aceite** mensurável.
   - **BC:** Atendimento, Paciente
 
 - [x] **CX-035** — Encaminhar ao médico (desfecho `ENCAMINHADO_MEDICO`)
-  - **Aceite:** atendimento atual → `FINALIZADO` + desfecho `ENCAMINHADO_MEDICO`; port de revogação chamado (no-op até Épico E); nasce filho `AGUARDANDO` com `encaminhadoDeId` e mesma classificação de risco
+  - **Aceite:** atendimento atual → `FINALIZADO` + desfecho `ENCAMINHADO_MEDICO`; port de revogação chamado; nasce filho `AGUARDANDO` com `encaminhadoDeId` e mesma classificação de risco
   - **BC:** Atendimento, Prontuario, Telepresenca
   - **Nota:** imutabilidade de prontuário no Épico D
 
 - [x] **CX-036** — Encerrar atendimento (desfecho `ENCERRADO`)
-  - **Aceite:** status `FINALIZADO` + desfecho `ENCERRADO`; **não** cria filho; revogação via port (no-op até Épico E)
+  - **Aceite:** status `FINALIZADO` + desfecho `ENCERRADO`; **não** cria filho; revogação via port
   - **BC:** Atendimento, Prontuario, Telepresenca
   - **Nota:** imutabilidade de prontuário no Épico D
 
@@ -284,51 +284,51 @@ Cada item traz **Aceite** mensurável.
 
 **Contexto:** `TelepresencaContext` (+ provedor Generic LiveKit)
 
-- [ ] **CX-060** — Sala existe **somente** com status `EM_ANDAMENTO`
+- [x] **CX-060** — Sala existe **somente** com status `EM_ANDAMENTO`
   - **Aceite:** emitir token com status diferente → 403/422
   - **BC:** Telepresenca, Atendimento
 
-- [ ] **CX-061** — Tokens de sala emitidos pelo backend, TTL ≤ 15 min, renováveis
+- [x] **CX-061** — Tokens de sala emitidos pelo backend, TTL ≤ 15 min, renováveis
   - **Aceite:** token expira; renew com atendimento ainda ativo funciona
   - **BC:** Telepresenca
 
-- [ ] **CX-062** — Token vinculado a atendimento + participante
+- [x] **CX-062** — Token vinculado a atendimento + participante
   - **Aceite:** token de outro atendimento/participante rejeitado
   - **BC:** Telepresenca
 
-- [ ] **CX-063** — Link do paciente: token opaco, expirável, **uso único**, revogado ao concluir
+- [x] **CX-063** — Link do paciente: token opaco, expirável, **uso único**, revogado ao concluir
   - **Aceite:** (1) segundo uso do mesmo link → falha (401/403/410), mesmo com atendimento ainda `EM_ANDAMENTO`; (2) link expirado → falha; (3) após `FINALIZADO`/revoke → falha
   - **BC:** Telepresenca
 
-- [ ] **CX-064** — Link de outro atendimento → **403**
+- [x] **CX-064** — Link de outro atendimento → **403**
   - **Aceite:** teste negativo cobrindo mismatch de atendimento
   - **BC:** Telepresenca
 
-- [ ] **CX-065** — Finalizar atendimento invalida **todos** os tokens da sala imediatamente
+- [x] **CX-065** — Finalizar atendimento invalida **todos** os tokens da sala imediatamente
   - **Aceite:** renew/join após finalizar falha
   - **BC:** Telepresenca, Atendimento
 
-- [ ] **CX-066** — Paciente entra na sala **sem login**, só pelo link
+- [x] **CX-066** — Paciente entra na sala **sem login**, só pelo link
   - **Aceite:** fluxo paciente não exige JWT de usuário
   - **BC:** Telepresenca
 
-- [ ] **CX-067** — Adapter LiveKit (port + ACL); Compose sobe LiveKit
+- [x] **CX-067** — Adapter LiveKit (port + ACL); Compose sobe LiveKit
   - **Aceite:** profissional e paciente conectam áudio/vídeo na sala ativa
   - **BC:** Telepresenca
 
-- [ ] **CX-068** — Chat textual na sala com persistência (WebSocket Nest)
+- [x] **CX-068** — Chat textual na sala com persistência (WebSocket Nest)
   - **Aceite:** mensagens aparecem em tempo real e sobrevivem a refresh durante `EM_ANDAMENTO`
   - **BC:** Telepresenca
 
-- [ ] **CX-069** — Tela **Sala de Atendimento**: vídeo + chat + prontuário lado a lado
+- [x] **CX-069** — Tela **Sala de Atendimento**: vídeo + chat + prontuário lado a lado
   - **Aceite:** três painéis visíveis em viewport desktop; usável em mobile
   - **BC:** Telepresenca, Prontuario
 
-- [ ] **CX-070** — Ao finalizar na sala: escolher **encaminhar ao médico** ou **encerrar atendimento**
+- [x] **CX-070** — Ao finalizar na sala: escolher **encaminhar ao médico** ou **encerrar atendimento**
   - **Aceite:** UI exige escolha exclusiva; `encaminhar` → CX-035; `encerrar` → CX-036; nenhum caminho viola o grafo de estados
   - **BC:** Atendimento, Telepresenca
 
-- [ ] **CX-071** — UI na sala: exibir/copiar **link do paciente** (profissional autorizado)
+- [x] **CX-071** — UI na sala: exibir/copiar **link do paciente** (profissional autorizado)
   - **Aceite:** profissional em `EM_ANDAMENTO` obtém URL/token de convite; paciente acessa sem login (CX-066); link respeita CX-063/064/065
   - **BC:** Telepresenca
 
@@ -338,27 +338,27 @@ Cada item traz **Aceite** mensurável.
 
 **Contexto:** `PacienteContext` (read models)
 
-- [ ] **CX-080** — Listagem de pacientes
+- [x] **CX-080** — Listagem de pacientes
   - **Aceite:** ENFERMEIRO/MEDICO listam; ADMIN sem dados clínicos derivados de prontuário
   - **BC:** Paciente
 
-- [ ] **CX-081** — Busca por Nome/CPF
+- [x] **CX-081** — Busca por Nome/CPF
   - **Aceite:** filtros retornam subconjunto correto
   - **BC:** Paciente
 
-- [ ] **CX-082** — Detalhe do paciente: histórico de atendimentos
+- [x] **CX-082** — Detalhe do paciente: histórico de atendimentos
   - **Aceite:** lista atendimentos passados do paciente
   - **BC:** Paciente, Atendimento
 
-- [ ] **CX-083** — Detalhe: sinais vitais e prontuários anteriores
+- [x] **CX-083** — Detalhe: sinais vitais e prontuários anteriores
   - **Aceite:** conteúdo clínico visível só para papéis autorizados
   - **BC:** Paciente, Prontuario
 
-- [ ] **CX-084** — Leituras clínicas no detalhe passam pelo mesmo gate de auditoria
+- [x] **CX-084** — Leituras clínicas no detalhe passam pelo mesmo gate de auditoria
   - **Aceite:** abrir histórico/prontuário gera audit log
   - **BC:** Auditoria, Prontuario
 
-- [ ] **CX-085** — Tela **Pacientes** no frontend
+- [x] **CX-085** — Tela **Pacientes** no frontend
   - **Aceite:** listagem + detalhe navegáveis
   - **BC:** Paciente
 
@@ -399,7 +399,7 @@ Cada item traz **Aceite** mensurável.
   - **Aceite:** API layer-first + BCs por subpasta; web e docs óbvios no README; conforme [api-clean-architecture.md](./api-clean-architecture.md)
   - **BC:** transversal
 
-- [ ] **CX-102** — ADRs / documentação de trade-offs e decisões técnicas
+- [x] **CX-102** — ADRs / documentação de trade-offs e decisões técnicas
   - **Aceite:** pasta `docs/architecture/adrs/` (ou equivalente) com decisões de stack, concorrência, vídeo, authz
   - **BC:** transversal
 
@@ -421,6 +421,40 @@ Cada item traz **Aceite** mensurável.
 
 ---
 
+### Épico I — Memória local & demo sem Postgres
+
+**Contexto:** permitir demonstrar a API/web **sem PostgreSQL instalado**, com store em memória no Nest; opcionalmente sincronizar (write-behind) para o banco quando disponível.
+
+- [x] **CX-110** — Modo de persistência configurável (`PERSISTENCE_MODE`)
+  - **Aceite:** `memory` | `write-behind` | `postgres` documentados no README/`.env.example`
+  - **BC:** transversal
+
+- [x] **CX-111** — Store em memória como fonte de verdade da request
+  - **Aceite:** em `memory`/`write-behind`, leituras/escritas de domínio passam pelos adapters de memória (ports intactos)
+  - **BC:** transversal
+
+- [x] **CX-112** — Seed em memória (ADMIN/ENFERMEIRO/MEDICO + fila)
+  - **Aceite:** login e fila funcionam sem migrar/seed Prisma
+  - **BC:** IdentityAccess, Atendimento
+
+- [x] **CX-113** — Write-behind: resposta HTTP antes do flush no Postgres
+  - **Aceite:** em `write-behind`, mutações atualizam memória imediatamente; após a resposta a API tenta persistir no banco (best-effort, sem falhar a request)
+  - **BC:** transversal
+
+- [x] **CX-114** — API sobe sem Postgres em `memory`
+  - **Aceite:** `PERSISTENCE_MODE=memory` não exige `DATABASE_URL` válida nem `prisma migrate`
+  - **BC:** transversal
+
+- [x] **CX-115** — Health/UI mostram o modo ativo
+  - **Aceite:** `GET /health` expõe `persistenceMode`; web exibe indicador na home
+  - **BC:** transversal
+
+- [x] **CX-116** — Limitações documentadas (volátil, sem HA, LiveKit opcional)
+  - **Aceite:** README/ADR deixam claro que memória é para demo local; produção usa `postgres`
+  - **BC:** transversal
+
+---
+
 ## 4. Ordem de implementação sugerida (até 10/08/2026)
 
 Prioridade: **regras de backend e authz** antes de polir UI.
@@ -436,6 +470,7 @@ Prioridade: **regras de backend e authz** antes de polir UI.
 | 7 | Pacientes | CX-080–CX-085 |
 | 8 | PWA + testes de qualidade | CX-090–CX-094 |
 | 9 | Empacotar entrega | CX-100–CX-106 |
+| 10 | Memória local / demo sem DB | CX-110–CX-116 |
 
 Fluxos principais:
 
@@ -558,13 +593,14 @@ sequenceDiagram
 | --- | --- | --- |
 | A Fundação | CX-001–CX-009 (9) | 9 |
 | B Identity & Admin | CX-010–CX-016 (7) | 7 |
-| C Atendimento / Fila | CX-020–CX-038 (19) | 0 |
-| D Prontuário | CX-040–CX-049 (10) | 0 |
-| E Telepresença | CX-060–CX-071 (12) | 0 |
-| F Pacientes | CX-080–CX-085 (6) | 0 |
+| C Atendimento / Fila | CX-020–CX-038 (19) | 19 |
+| D Prontuário | CX-040–CX-049 (10) | 10 |
+| E Telepresença | CX-060–CX-071 (12) | 12 |
+| F Pacientes | CX-080–CX-085 (6) | 6 |
 | G PWA & Qualidade | CX-090–CX-094 (5) | 0 |
-| H Entrega | CX-100–CX-106 (7) | 0 |
-| **Total** | **75** | **16** |
+| H Entrega | CX-100–CX-106 (7) | 1 |
+| I Memória / demo | CX-110–CX-116 (7) | 7 |
+| **Total** | **82** | **71** |
 
 Atualizar checkboxes e a coluna “Feitos” conforme a implementação avançar item a item.
 

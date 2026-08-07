@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import {
   AccessTokenClaims,
   IssuedToken,
+  PatientTokenClaims,
   TokenService,
 } from '@/app/contracts/token-service';
 
@@ -42,6 +43,7 @@ export class JwtTokenService implements TokenService {
     const expiresInSeconds = parseExpiresInToSeconds(expiresInRaw);
     const accessToken = await this.jwt.signAsync(
       {
+        kind: 'professional',
         email: claims.email,
         role: claims.role,
       },
@@ -52,5 +54,25 @@ export class JwtTokenService implements TokenService {
     );
 
     return { accessToken, expiresIn: expiresInRaw };
+  }
+
+  async signPatient(
+    claims: PatientTokenClaims,
+    expiresInSeconds: number,
+  ): Promise<IssuedToken> {
+    const accessToken = await this.jwt.signAsync(
+      {
+        kind: 'patient',
+        atendimentoId: claims.atendimentoId,
+      },
+      {
+        subject: claims.sub,
+        expiresIn: expiresInSeconds,
+      },
+    );
+    return {
+      accessToken,
+      expiresIn: `${expiresInSeconds}s`,
+    };
   }
 }
