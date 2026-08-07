@@ -93,4 +93,15 @@ describe('DomainExceptionFilter observabilidade', () => {
     expect(payload.event).toBe('invalid_state_transition');
     expect(payload.status).toBe(422);
   });
+
+  it('redige token do link do paciente no path do log', () => {
+    const filter = new DomainExceptionFilter();
+    const { host } = hostWith('/sala/links/opaque-secret-token/resgatar', null);
+    filter.catch(new ForbiddenError('Link inválido'), host);
+
+    const payload = JSON.parse(warn.mock.calls[0]?.[0] as string) as {
+      path: string;
+    };
+    expect(payload.path).toBe('/sala/links/[REDACTED]/resgatar');
+  });
 });

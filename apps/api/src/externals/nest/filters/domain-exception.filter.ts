@@ -17,6 +17,7 @@ import {
   ValidationError,
 } from '@/entities/errors/domain-error';
 import { AuthPrincipal } from '@/externals/nest/security/authenticated-user';
+import { redactSensitivePath } from '@/externals/logging/redact-sensitive-path';
 
 type RequestWithContext = Request & {
   user?: AuthPrincipal;
@@ -48,7 +49,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
         status,
         requestId: request.requestId ?? null,
         method: request.method,
-        path: request.path,
+        path: redactSensitivePath(request.path),
         userId,
       }),
     );
