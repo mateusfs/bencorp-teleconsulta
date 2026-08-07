@@ -18,11 +18,11 @@ Avaliadores e demos locais podem não ter PostgreSQL. O case exige Postgres + Pr
 | `memory` | Adapters em memória; seed local; sem conexão Prisma |
 | `write-behind` | Memória como fonte da request; após a resposta HTTP, flush best-effort para Postgres |
 
-Ports (`*Repository`) permanecem iguais; só o composition root escolhe o adapter. LiveKit em `memory` usa provider fake (token sintético) para não depender do SFU na demo mínima.
+Ports (`*Repository`) permanecem iguais; só o composition root escolhe o adapter. Vídeo usa `LiveKitVideoRoomProvider` também em `memory`/`write-behind` (SFU via Compose/`LIVEKIT_*`); o `FakeVideoRoomProvider` fica só em testes unitários.
 
 ## Consequências
 
-- Demo: `PERSISTENCE_MODE=memory npm run dev:api` + web.
+- Demo: `npm run dev:api:memory` (ou `scripts/dev-memory.sh`) com LiveKit no ar + web.
 - Dados em memória são voláteis (reinício zera o estado).
 - Write-behind não garante durabilidade se o processo cair antes do flush.
 - Produção / avaliação com stack completa: `postgres`.

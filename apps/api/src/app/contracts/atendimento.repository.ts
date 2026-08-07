@@ -15,6 +15,7 @@ export type ListarFilaFilters = {
   periodo?: PeriodoFila;
   encaminhadosOnly?: boolean;
   now?: Date;
+  limit?: number;
 };
 
 export type CreateAtendimentoInput = {

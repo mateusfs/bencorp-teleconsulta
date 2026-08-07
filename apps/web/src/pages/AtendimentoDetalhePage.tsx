@@ -16,12 +16,22 @@ import {
 } from '../api';
 import type {
   AtendimentoFilaItem,
-  ClassificacaoRisco,
   Prontuario,
   VideoAccessToken,
 } from '../api';
 import { ChatPanel } from '../components/ChatPanel';
 import { VideoRoom } from '../components/VideoRoom';
+import {
+  collectVitalErrors,
+  isProntuarioComplete,
+  labelForProntuarioField,
+  missingProntuarioFields,
+  parseApiFieldErrors,
+  parseRiskClassification,
+  toVitalPayload,
+  type VitalFieldKey,
+} from '../prontuarioCompleteness';
+import { labelRisco, labelStatus } from '../labels';
 
 export function AtendimentoDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +46,11 @@ export function AtendimentoDetalhePage() {
   const [finishChoice, setFinishChoice] = useState<
     'encerrar' | 'encaminhar' | null
   >(null);
+  const [saveOk, setSaveOk] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<VitalFieldKey, string>>
+  >({});
 
   const refresh = useCallback(async (): Promise<void> => {
     if (!id) return;
@@ -47,6 +62,8 @@ export function AtendimentoDetalhePage() {
         atendimento.status === 'FINALIZADO'
       ) {
         setProntuario(await getProntuarioByAtendimento(id));
+        setDirty(false);
+        setSaveOk(false);
       } else {
         setProntuario(null);
       }
@@ -62,22 +79,32 @@ export function AtendimentoDetalhePage() {
     }
   }, [me?.role, refresh]);
 
+  const salaOwner =
+    item?.status === 'EM_ANDAMENTO' && item.professionalId === me?.id;
+
   useEffect(() => {
-    if (
-      !id ||
-      !item ||
-      item.status !== 'EM_ANDAMENTO' ||
-      item.professionalId !== me?.id
-    ) {
+    if (!id || !salaOwner) {
       setVideo(null);
       return;
     }
+    let cancelled = false;
     void emitirTokenSala(id)
-      .then(setVideo)
+      .then((token) => {
+        if (!cancelled) {
+          setVideo(token);
+        }
+      })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Erro no token de sala');
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : 'Erro no token de sala',
+          );
+        }
       });
-  }, [id, item, me?.id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [id, salaOwner]);
 
   if (!me) {
     return <Navigate to="/login" replace />;
@@ -94,6 +121,15 @@ export function AtendimentoDetalhePage() {
   const canEdit = Boolean(isOwner && prontuario);
   const canAdendo = item?.status === 'FINALIZADO' && Boolean(prontuario);
   const salaAtiva = Boolean(isOwner && video && accessToken && id);
+  const missingFields = prontuario
+    ? missingProntuarioFields(prontuario, role)
+    : [];
+  const formComplete = prontuario
+    ? isProntuarioComplete(prontuario, role)
+    : false;
+  const totalRequired = role === 'MEDICO' ? 10 : 9;
+  const filledCount = totalRequired - missingFields.length;
+  const canSave = Boolean(canEdit && formComplete && dirty);
 
   async function onCopyLink(): Promise<void> {
     if (!id) return;
@@ -108,6 +144,15 @@ export function AtendimentoDetalhePage() {
 
   async function confirmFinish(): Promise<void> {
     if (!id || !finishChoice) return;
+    if (prontuario && (!isProntuarioComplete(prontuario, role) || dirty)) {
+      setError(
+        dirty
+          ? 'Salve o prontuário antes de encerrar ou encaminhar.'
+          : 'Conclua e salve o prontuário antes de encerrar ou encaminhar.',
+      );
+      setFinishChoice(null);
+      return;
+    }
     try {
       if (finishChoice === 'encerrar') {
         setItem(await encerrarAtendimento(id));
@@ -123,32 +168,51 @@ export function AtendimentoDetalhePage() {
     }
   }
 
-  async function onSaveProntuario(event: FormEvent): Promise<void> {
+  async function onSaveProntuario(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
     event.preventDefault();
     if (!id || !prontuario) return;
+    const missing = missingProntuarioFields(prontuario, role);
+    const vitals = collectVitalErrors(prontuario);
+    if (missing.length > 0 || !dirty) {
+      setSaveOk(false);
+      setFieldErrors(vitals);
+      setError(
+        missing.length > 0
+          ? `Preencha todos os campos obrigatórios: ${missing
+              .map(labelForProntuarioField)
+              .join(', ')}`
+          : 'Nenhuma alteração para salvar.',
+      );
+      return;
+    }
     try {
+      const vitalsPayload = toVitalPayload(prontuario);
       const payload = {
-        queixa: prontuario.queixa,
-        anamnese: prontuario.anamnese,
-        conduta: prontuario.conduta,
-        paSistolica: prontuario.paSistolica,
-        paDiastolica: prontuario.paDiastolica,
-        fc: prontuario.fc,
-        temperatura: prontuario.temperatura,
-        spo2: prontuario.spo2,
+        queixa: prontuario.queixa.trim(),
+        anamnese: prontuario.anamnese.trim(),
+        conduta: prontuario.conduta.trim(),
+        ...vitalsPayload,
         riskClassification: prontuario.riskClassification,
         ...(role === 'MEDICO'
           ? {
-              prescricao: prontuario.prescricao,
-              complementoMedico: prontuario.complementoMedico,
+              prescricao: prontuario.prescricao.trim(),
+              complementoMedico: prontuario.complementoMedico.trim(),
             }
           : {}),
       };
       setProntuario(await updateProntuario(id, payload));
       setItem(await getAtendimento(id));
       setError(null);
+      setFieldErrors({});
+      setDirty(false);
+      setSaveOk(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar');
+      setSaveOk(false);
+      const message = err instanceof Error ? err.message : 'Erro ao salvar';
+      setFieldErrors(parseApiFieldErrors(message));
+      setError(message);
     }
   }
 
@@ -165,7 +229,22 @@ export function AtendimentoDetalhePage() {
   }
 
   function patchProntuario(partial: Partial<Prontuario>): void {
+    setDirty(true);
+    setSaveOk(false);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      (Object.keys(partial) as Array<keyof Prontuario>).forEach((key) => {
+        if (key in next) {
+          delete next[key as VitalFieldKey];
+        }
+      });
+      return next;
+    });
     setProntuario((prev) => (prev ? { ...prev, ...partial } : prev));
+  }
+
+  function vitalClass(key: VitalFieldKey): string {
+    return fieldErrors[key] ? 'field-invalid' : '';
   }
 
   return (
@@ -194,12 +273,20 @@ export function AtendimentoDetalhePage() {
             <p>
               <strong>{item.patientName}</strong> · {item.patientContact}
             </p>
-            <p className="muted">
-              Status: {item.status}
-              {item.desfecho ? ` · ${item.desfecho}` : ''}
-              {item.riskClassification
-                ? ` · Risco ${item.riskClassification}`
-                : ''}
+            <p className="muted status-line">
+              <span className="status-chip">
+                Status: <strong>{labelStatus(item.status)}</strong>
+              </span>
+              {item.desfecho ? (
+                <span className="status-chip">Desfecho: {item.desfecho}</span>
+              ) : null}
+              {item.riskClassification ? (
+                <span
+                  className={`status-chip risk-chip risk-${item.riskClassification.toLowerCase()}`}
+                >
+                  Risco: <strong>{labelRisco(item.riskClassification)}</strong>
+                </span>
+              ) : null}
             </p>
             {isOwner ? (
               <div className="row gap wrap">
@@ -209,6 +296,14 @@ export function AtendimentoDetalhePage() {
                 <button
                   type="button"
                   className="secondary"
+                  disabled={!formComplete || dirty}
+                  title={
+                    !formComplete
+                      ? 'Conclua o prontuário antes de encerrar'
+                      : dirty
+                        ? 'Salve o prontuário antes de encerrar'
+                        : undefined
+                  }
                   onClick={() => setFinishChoice('encerrar')}
                 >
                   Encerrar
@@ -216,6 +311,14 @@ export function AtendimentoDetalhePage() {
                 <button
                   type="button"
                   className="secondary"
+                  disabled={!formComplete || dirty}
+                  title={
+                    !formComplete
+                      ? 'Conclua o prontuário antes de encaminhar'
+                      : dirty
+                        ? 'Salve o prontuário antes de encaminhar'
+                        : undefined
+                  }
                   onClick={() => setFinishChoice('encaminhar')}
                 >
                   Encaminhar ao médico
@@ -261,7 +364,12 @@ export function AtendimentoDetalhePage() {
             <section className="card sala-panel">
               <h2>Vídeo</h2>
               {salaAtiva && video ? (
-                <VideoRoom token={video.token} url={video.url} enabled />
+                <VideoRoom
+                  key={id}
+                  token={video.token}
+                  url={video.url}
+                  enabled
+                />
               ) : (
                 <p className="muted">
                   Vídeo disponível para o responsável em EM_ANDAMENTO.
@@ -275,6 +383,7 @@ export function AtendimentoDetalhePage() {
                   atendimentoId={id}
                   accessToken={accessToken}
                   enabled
+                  perspective="PROFISSIONAL"
                 />
               ) : (
                 <>
@@ -288,120 +397,99 @@ export function AtendimentoDetalhePage() {
               <h2>Prontuário</h2>
               {prontuario ? (
                 <>
+                  {canEdit ? (
+                    <div className="prontuario-progress" aria-live="polite">
+                      <div className="prontuario-progress__bar">
+                        <span
+                          style={{
+                            width: `${Math.round(
+                              (filledCount / totalRequired) * 100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="muted">
+                        {formComplete
+                          ? 'Formulário completo — você já pode salvar.'
+                          : `${filledCount}/${totalRequired} campos obrigatórios preenchidos`}
+                      </p>
+                      {!formComplete ? (
+                        <p className="prontuario-missing">
+                          Faltam:{' '}
+                          {missingFields
+                            .map(labelForProntuarioField)
+                            .join(', ')}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {saveOk ? (
+                    <p className="save-ok">Prontuário salvo com sucesso.</p>
+                  ) : null}
                   <form
                     className="prontuario-form"
                     onSubmit={(e) => void onSaveProntuario(e)}
+                    noValidate
                   >
-                    <label>
-                      Queixa
-                      <textarea
-                        disabled={!canEdit}
-                        value={prontuario.queixa}
-                        onChange={(e) =>
-                          patchProntuario({ queixa: e.target.value })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Anamnese
-                      <textarea
-                        disabled={!canEdit}
-                        value={prontuario.anamnese}
-                        onChange={(e) =>
-                          patchProntuario({ anamnese: e.target.value })
-                        }
-                      />
-                    </label>
-                    <div className="filters">
+                    <fieldset className="prontuario-fieldset" disabled={!canEdit}>
+                      <legend>Triagem clínica</legend>
                       <label>
-                        PA sistólica
-                        <input
-                          type="number"
-                          disabled={!canEdit}
-                          value={prontuario.paSistolica ?? ''}
-                          onChange={(e) =>
-                            patchProntuario({
-                              paSistolica: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
+                        <span className="field-label">
+                          Queixa <span className="req" aria-hidden>*</span>
+                        </span>
+                        <textarea
+                          name="queixa"
+                          required
+                          value={prontuario.queixa}
+                          onChange={(e) => {
+                            patchProntuario({ queixa: e.target.value });
+                          }}
                         />
                       </label>
                       <label>
-                        PA diastólica
-                        <input
-                          type="number"
-                          disabled={!canEdit}
-                          value={prontuario.paDiastolica ?? ''}
-                          onChange={(e) =>
-                            patchProntuario({
-                              paDiastolica: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
+                        <span className="field-label">
+                          Anamnese <span className="req" aria-hidden>*</span>
+                        </span>
+                        <textarea
+                          name="anamnese"
+                          required
+                          value={prontuario.anamnese}
+                          onChange={(e) => {
+                            patchProntuario({ anamnese: e.target.value });
+                          }}
                         />
                       </label>
                       <label>
-                        FC
-                        <input
-                          type="number"
-                          disabled={!canEdit}
-                          value={prontuario.fc ?? ''}
-                          onChange={(e) =>
-                            patchProntuario({
-                              fc: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
+                        <span className="field-label">
+                          Conduta <span className="req" aria-hidden>*</span>
+                        </span>
+                        <textarea
+                          name="conduta"
+                          required
+                          value={prontuario.conduta}
+                          onChange={(e) => {
+                            patchProntuario({ conduta: e.target.value });
+                          }}
                         />
                       </label>
                       <label>
-                        Temp (°C)
-                        <input
-                          type="number"
-                          step="0.1"
-                          disabled={!canEdit}
-                          value={prontuario.temperatura ?? ''}
-                          onChange={(e) =>
-                            patchProntuario({
-                              temperatura: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
-                        />
-                      </label>
-                      <label>
-                        SpO₂
-                        <input
-                          type="number"
-                          disabled={!canEdit}
-                          value={prontuario.spo2 ?? ''}
-                          onChange={(e) =>
-                            patchProntuario({
-                              spo2: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
-                        />
-                      </label>
-                      <label>
-                        Classificação de risco
+                        <span className="field-label">
+                          Classificação de risco{' '}
+                          <span className="req" aria-hidden>*</span>
+                        </span>
                         <select
-                          disabled={!canEdit}
+                          name="riskClassification"
+                          required
                           value={prontuario.riskClassification ?? ''}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             patchProntuario({
-                              riskClassification: (e.target.value ||
-                                null) as ClassificacaoRisco | null,
-                            })
-                          }
+                              riskClassification: parseRiskClassification(
+                                e.target.value,
+                              ),
+                            });
+                          }}
                         >
-                          <option value="">—</option>
+                          <option value="">Selecione…</option>
                           <option value="VERMELHO">Vermelho</option>
                           <option value="LARANJA">Laranja</option>
                           <option value="AMARELO">Amarelo</option>
@@ -409,47 +497,219 @@ export function AtendimentoDetalhePage() {
                           <option value="AZUL">Azul</option>
                         </select>
                       </label>
-                    </div>
-                    <label>
-                      Conduta
-                      <textarea
-                        disabled={!canEdit}
-                        value={prontuario.conduta}
-                        onChange={(e) =>
-                          patchProntuario({ conduta: e.target.value })
-                        }
-                      />
-                    </label>
+                    </fieldset>
+
+                    <fieldset className="prontuario-fieldset" disabled={!canEdit}>
+                      <legend>Sinais vitais</legend>
+                      <div className="filters">
+                        <label className={vitalClass('paSistolica')}>
+                          <span className="field-label">
+                            PA sistólica{' '}
+                            <span className="req" aria-hidden>*</span>
+                          </span>
+                          <input
+                            name="paSistolica"
+                            type="number"
+                            required
+                            min={50}
+                            max={300}
+                            className={vitalClass('paSistolica')}
+                            aria-invalid={Boolean(fieldErrors.paSistolica)}
+                            value={prontuario.paSistolica ?? ''}
+                            onChange={(e) => {
+                              patchProntuario({
+                                paSistolica: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              });
+                            }}
+                          />
+                          {fieldErrors.paSistolica ? (
+                            <span className="field-error">
+                              {fieldErrors.paSistolica}
+                            </span>
+                          ) : null}
+                        </label>
+                        <label className={vitalClass('paDiastolica')}>
+                          <span className="field-label">
+                            PA diastólica{' '}
+                            <span className="req" aria-hidden>*</span>
+                          </span>
+                          <input
+                            name="paDiastolica"
+                            type="number"
+                            required
+                            min={20}
+                            max={200}
+                            className={vitalClass('paDiastolica')}
+                            aria-invalid={Boolean(fieldErrors.paDiastolica)}
+                            value={prontuario.paDiastolica ?? ''}
+                            onChange={(e) => {
+                              patchProntuario({
+                                paDiastolica: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              });
+                            }}
+                          />
+                          {fieldErrors.paDiastolica ? (
+                            <span className="field-error">
+                              {fieldErrors.paDiastolica}
+                            </span>
+                          ) : null}
+                        </label>
+                        <label className={vitalClass('fc')}>
+                          <span className="field-label">
+                            FC <span className="req" aria-hidden>*</span>
+                          </span>
+                          <input
+                            name="fc"
+                            type="number"
+                            required
+                            min={20}
+                            max={250}
+                            className={vitalClass('fc')}
+                            aria-invalid={Boolean(fieldErrors.fc)}
+                            value={prontuario.fc ?? ''}
+                            onChange={(e) => {
+                              patchProntuario({
+                                fc: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              });
+                            }}
+                          />
+                          {fieldErrors.fc ? (
+                            <span className="field-error">{fieldErrors.fc}</span>
+                          ) : null}
+                        </label>
+                        <label className={vitalClass('temperatura')}>
+                          <span className="field-label">
+                            Temp (°C) <span className="req" aria-hidden>*</span>
+                          </span>
+                          <input
+                            name="temperatura"
+                            type="number"
+                            required
+                            step="0.1"
+                            min={30}
+                            max={45}
+                            className={vitalClass('temperatura')}
+                            aria-invalid={Boolean(fieldErrors.temperatura)}
+                            value={prontuario.temperatura ?? ''}
+                            onChange={(e) => {
+                              patchProntuario({
+                                temperatura: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              });
+                            }}
+                          />
+                          {fieldErrors.temperatura ? (
+                            <span className="field-error">
+                              {fieldErrors.temperatura}
+                            </span>
+                          ) : null}
+                        </label>
+                        <label className={vitalClass('spo2')}>
+                          <span className="field-label">
+                            SpO₂ <span className="req" aria-hidden>*</span>
+                          </span>
+                          <input
+                            name="spo2"
+                            type="number"
+                            required
+                            min={50}
+                            max={100}
+                            className={vitalClass('spo2')}
+                            aria-invalid={Boolean(fieldErrors.spo2)}
+                            value={prontuario.spo2 ?? ''}
+                            onChange={(e) => {
+                              patchProntuario({
+                                spo2: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              });
+                            }}
+                          />
+                          {fieldErrors.spo2 ? (
+                            <span className="field-error">
+                              {fieldErrors.spo2}
+                            </span>
+                          ) : null}
+                        </label>
+                      </div>
+                    </fieldset>
+
                     {role === 'MEDICO' || prontuario.prescricao ? (
-                      <>
+                      <fieldset
+                        className="prontuario-fieldset"
+                        disabled={!canEdit || role !== 'MEDICO'}
+                      >
+                        <legend>Conduta médica</legend>
                         <label>
-                          Prescrição
+                          <span className="field-label">
+                            Prescrição
+                            {role === 'MEDICO' ? (
+                              <>
+                                {' '}
+                                <span className="req" aria-hidden>*</span>
+                              </>
+                            ) : null}
+                          </span>
                           <textarea
-                            disabled={!canEdit || role !== 'MEDICO'}
+                            name="prescricao"
+                            required={role === 'MEDICO'}
                             value={prontuario.prescricao}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               patchProntuario({
                                 prescricao: e.target.value,
-                              })
-                            }
+                              });
+                            }}
                           />
                         </label>
                         <label>
-                          Complemento médico
+                          <span className="field-label">Complemento médico</span>
                           <textarea
-                            disabled={!canEdit || role !== 'MEDICO'}
+                            name="complementoMedico"
                             value={prontuario.complementoMedico}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               patchProntuario({
                                 complementoMedico: e.target.value,
-                              })
-                            }
+                              });
+                            }}
                           />
                         </label>
-                      </>
+                      </fieldset>
                     ) : null}
+
                     {canEdit ? (
-                      <button type="submit">Salvar prontuário</button>
+                      <div className="prontuario-actions">
+                        <button
+                          type="submit"
+                          className={canSave ? undefined : 'btn-blocked'}
+                          disabled={!canSave}
+                          aria-disabled={!canSave}
+                        >
+                          Salvar prontuário
+                        </button>
+                        {!formComplete ? (
+                          <p className="prontuario-missing">
+                            Salvamento bloqueado. Faltam:{' '}
+                            {missingFields
+                              .map(labelForProntuarioField)
+                              .join(', ')}
+                          </p>
+                        ) : dirty ? (
+                          <p className="muted">
+                            Formulário completo. Clique em salvar para gravar.
+                          </p>
+                        ) : (
+                          <p className="muted">
+                            Prontuário salvo. Encerrar e encaminhar liberados.
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <p className="muted">
                         Edição bloqueada (somente responsável em EM_ANDAMENTO).

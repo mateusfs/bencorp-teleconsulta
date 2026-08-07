@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -8,6 +9,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { ClassificacaoRisco } from '@/entities/atendimento';
 
@@ -37,38 +39,45 @@ export class AtualizarProntuarioDto {
   @MaxLength(4000)
   complementoMedico?: string;
 
-  @IsOptional()
-  @IsInt()
-  @Min(50)
-  @Max(300)
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @Type(() => Number)
+  @IsInt({ message: 'PA sistólica deve ser um número inteiro' })
+  @Min(50, { message: 'PA sistólica deve ser no mínimo 50' })
+  @Max(300, { message: 'PA sistólica deve ser no máximo 300' })
   paSistolica?: number | null;
 
-  @IsOptional()
-  @IsInt()
-  @Min(20)
-  @Max(200)
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @Type(() => Number)
+  @IsInt({ message: 'PA diastólica deve ser um número inteiro' })
+  @Min(20, { message: 'PA diastólica deve ser no mínimo 20' })
+  @Max(200, { message: 'PA diastólica deve ser no máximo 200' })
   paDiastolica?: number | null;
 
-  @IsOptional()
-  @IsInt()
-  @Min(20)
-  @Max(250)
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @Type(() => Number)
+  @IsInt({ message: 'FC deve ser um número inteiro' })
+  @Min(20, { message: 'FC deve ser no mínimo 20' })
+  @Max(250, { message: 'FC deve ser no máximo 250' })
   fc?: number | null;
 
-  @IsOptional()
-  @IsNumber()
-  @Min(30)
-  @Max(45)
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @Type(() => Number)
+  @IsNumber({}, { message: 'Temperatura deve ser um número' })
+  @Min(30, { message: 'Temperatura deve ser no mínimo 30' })
+  @Max(45, { message: 'Temperatura deve ser no máximo 45' })
   temperatura?: number | null;
 
-  @IsOptional()
-  @IsInt()
-  @Min(50)
-  @Max(100)
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @Type(() => Number)
+  @IsInt({ message: 'SpO₂ deve ser um número inteiro' })
+  @Min(50, { message: 'SpO₂ deve ser no mínimo 50' })
+  @Max(100, { message: 'SpO₂ deve ser no máximo 100' })
   spo2?: number | null;
 
-  @IsOptional()
-  @IsEnum(ClassificacaoRisco)
+  @ValidateIf((_, value) => value !== null && value !== undefined)
+  @IsEnum(ClassificacaoRisco, {
+    message: 'Classificação de risco inválida',
+  })
   riskClassification?: ClassificacaoRisco | null;
 }
 

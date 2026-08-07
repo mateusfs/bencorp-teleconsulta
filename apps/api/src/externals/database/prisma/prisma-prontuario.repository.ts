@@ -97,21 +97,41 @@ export class PrismaProntuarioRepository implements ProntuarioRepository {
     id: string,
     input: AtualizarProntuarioInput,
   ): Promise<Prontuario> {
+    const data: {
+      queixa?: string;
+      anamnese?: string;
+      conduta?: string;
+      prescricao?: string;
+      complementoMedico?: string;
+      paSistolica?: number | null;
+      paDiastolica?: number | null;
+      fc?: number | null;
+      temperatura?: number | null;
+      spo2?: number | null;
+      riskClassification?: ClassificacaoRisco | null;
+    } = {};
+
+    if (input.queixa !== undefined) data.queixa = input.queixa;
+    if (input.anamnese !== undefined) data.anamnese = input.anamnese;
+    if (input.conduta !== undefined) data.conduta = input.conduta;
+    if (input.prescricao !== undefined) data.prescricao = input.prescricao;
+    if (input.complementoMedico !== undefined) {
+      data.complementoMedico = input.complementoMedico;
+    }
+    if (input.paSistolica !== undefined) data.paSistolica = input.paSistolica;
+    if (input.paDiastolica !== undefined) {
+      data.paDiastolica = input.paDiastolica;
+    }
+    if (input.fc !== undefined) data.fc = input.fc;
+    if (input.temperatura !== undefined) data.temperatura = input.temperatura;
+    if (input.spo2 !== undefined) data.spo2 = input.spo2;
+    if (input.riskClassification !== undefined) {
+      data.riskClassification = input.riskClassification;
+    }
+
     const row = await this.prisma.prontuario.update({
       where: { id },
-      data: {
-        queixa: input.queixa,
-        anamnese: input.anamnese,
-        conduta: input.conduta,
-        prescricao: input.prescricao,
-        complementoMedico: input.complementoMedico,
-        paSistolica: input.paSistolica,
-        paDiastolica: input.paDiastolica,
-        fc: input.fc,
-        temperatura: input.temperatura,
-        spo2: input.spo2,
-        riskClassification: input.riskClassification,
-      },
+      data,
       include,
     });
     return toDomain(row);

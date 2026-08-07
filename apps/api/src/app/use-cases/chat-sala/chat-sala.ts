@@ -7,6 +7,7 @@ import {
   CHAT_MESSAGE_REPOSITORY,
   ChatMessageRepository,
 } from '@/app/contracts/chat-message.repository';
+import { Atendimento } from '@/entities/atendimento';
 import {
   ForbiddenError,
   NotFoundError,
@@ -14,6 +15,20 @@ import {
 } from '@/entities/errors/domain-error';
 import { assertRoomActive, ChatMessage } from '@/entities/sala';
 import { isClinicalRole, UserRole } from '@/entities/user-role';
+
+function assertProfessionalOwnsChat(
+  atendimento: Atendimento,
+  professionalUserId: string | undefined,
+): void {
+  if (
+    !professionalUserId ||
+    atendimento.professionalId !== professionalUserId
+  ) {
+    throw new ForbiddenError(
+      'Somente o profissional responsável acessa o chat desta sala',
+    );
+  }
+}
 
 @Injectable()
 export class ListarMensagensChatUseCase {
@@ -27,6 +42,7 @@ export class ListarMensagensChatUseCase {
   async execute(input: {
     atendimentoId: string;
     role?: UserRole;
+    professionalUserId?: string;
     patientAtendimentoId?: string;
   }): Promise<ChatMessage[]> {
     if (input.patientAtendimentoId) {
@@ -43,6 +59,11 @@ export class ListarMensagensChatUseCase {
     }
 
     assertRoomActive(atendimento.status);
+
+    if (!input.patientAtendimentoId) {
+      assertProfessionalOwnsChat(atendimento, input.professionalUserId);
+    }
+
     return this.messages.listByAtendimento(input.atendimentoId);
   }
 }
@@ -95,6 +116,8 @@ export class EnviarMensagemChatUseCase {
         body,
       });
     }
+
+    assertProfessionalOwnsChat(atendimento, input.professionalUserId);
 
     return this.messages.create({
       atendimentoId: input.atendimentoId,

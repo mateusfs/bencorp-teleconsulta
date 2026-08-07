@@ -2,9 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { clearSession, getPacienteDetalhe, getStoredUser } from '../api';
 import type { PacienteDetalhe } from '../api';
+import { labelRisco, labelStatus } from '../labels';
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleString('pt-BR');
+}
+
+function displayText(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : '—';
 }
 
 export function PacienteDetalhePage() {
@@ -71,7 +77,8 @@ export function PacienteDetalhePage() {
                 {detail.atendimentos.map((a) => (
                   <li key={a.id}>
                     <Link to={`/atendimentos/${a.id}`}>
-                      {a.status} · risco {a.riskClassification ?? '—'} ·{' '}
+                      {labelStatus(a.status)} · risco{' '}
+                      {labelRisco(a.riskClassification)} ·{' '}
                       {formatDate(a.queuedAt)}
                     </Link>
                   </li>
@@ -86,19 +93,28 @@ export function PacienteDetalhePage() {
               <p className="muted">Sem prontuários.</p>
             ) : (
               detail.prontuarios.map((p) => (
-                <article key={p.id} className="card">
+                <article key={p.id} className="card prontuario-resumo">
+                  <p className="muted">
+                    Atualizado em {formatDate(p.updatedAt)} · risco{' '}
+                    {labelRisco(p.riskClassification)}
+                  </p>
                   <p>
-                    <strong>Queixa:</strong> {p.queixa || '—'}
+                    <strong>Queixa:</strong> {displayText(p.queixa)}
+                  </p>
+                  <p>
+                    <strong>Anamnese:</strong> {displayText(p.anamnese)}
+                  </p>
+                  <p>
+                    <strong>Conduta:</strong> {displayText(p.conduta)}
                   </p>
                   <p className="muted">
                     PA {p.paSistolica ?? '—'}/{p.paDiastolica ?? '—'} · FC{' '}
                     {p.fc ?? '—'} · Temp {p.temperatura ?? '—'} · SpO2{' '}
                     {p.spo2 ?? '—'}
                   </p>
-                  <p className="muted">
-                    Atendimento{' '}
+                  <p>
                     <Link to={`/atendimentos/${p.atendimentoId}`}>
-                      {p.atendimentoId}
+                      Abrir atendimento
                     </Link>
                   </p>
                 </article>

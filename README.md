@@ -43,23 +43,29 @@ Parar: `docker compose down` (volume Postgres persiste; `down -v` zera dados).
 
 ## Demo rápida sem Postgres
 
+Persistência em memória + vídeo **LiveKit real** (SFU no Compose). Tokens/sala usam o mesmo `LiveKitVideoRoomProvider` do modo postgres.
+
 ```bash
 cp .env.example .env
 npm install
-PERSISTENCE_MODE=memory JWT_SECRET=dev-secret npm run dev:api
+docker compose up -d livekit
+npm run build -w api
+npm run dev:api:memory
 # outro terminal
 npm run dev:web
 ```
 
+Atalho (API memory + Vite + LiveKit): `npm run dev:memory`.
+
 - Seed em memória (mesmos usuários da tabela abaixo)
 - Badge na Home: **Persistência: memory**
-- Vídeo usa provider fake (sem SFU); fila/login/prontuário/pacientes funcionam
+- Reinício da API zera IDs em memória — links/URLs antigas de atendimento deixam de valer
 
 | `PERSISTENCE_MODE` | Comportamento |
 | --- | --- |
 | `postgres` | Prisma + PostgreSQL (entrega / Compose) |
-| `memory` | Só memória |
-| `write-behind` | Memória na request + flush best-effort |
+| `memory` | Só memória + LiveKit |
+| `write-behind` | Memória na request + flush best-effort + LiveKit |
 
 Detalhes: [ADR-002](docs/architecture/adrs/002-persistencia-memoria-write-behind.md).
 
@@ -115,6 +121,8 @@ Na raiz do monorepo:
 | Script | Descrição |
 | --- | --- |
 | `npm run dev:api` / `dev:web` | Desenvolvimento |
+| `npm run dev:api:memory` | API em memória + env LiveKit/JWT |
+| `npm run dev:memory` | Script: LiveKit + API memory + Vite |
 | `npm test` / `npm run test:cov` | Testes da API + cobertura |
 | `npm run lint` | ESLint da API |
 | `npm run build` | Build API + web |
@@ -135,6 +143,7 @@ Resumo; detalhes em [limitacoes-e-abordagem.md](docs/architecture/limitacoes-e-a
 - PWA só cacheia shell — sem PHI/API offline
 - LiveKit `--dev` com keys de desenvolvimento
 - Modo `memory` volátil; write-behind sem garantia de durabilidade
+- React `StrictMode` ativo em dev (efeitos montam 2×); a sala de vídeo trata abort/retry para o LiveKit
 - Sem rate limit / APM avançado
 
 ## Uso de IA

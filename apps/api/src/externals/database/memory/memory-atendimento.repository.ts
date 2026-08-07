@@ -14,6 +14,7 @@ import {
   DesfechoAtendimento,
 } from '@/entities/atendimento';
 import { normalizeCpf, periodoToQueuedAtRange } from '@/entities/periodo-fila';
+import { DEFAULT_LIST_LIMIT } from '@/app/contracts/list-limits';
 import { MemoryAtendimento, MemoryStore } from './memory-store';
 
 @Injectable()
@@ -48,7 +49,9 @@ export class MemoryAtendimentoRepository implements AtendimentoRepository {
       );
     }
 
-    return list.map((item) => this.toFila(item, now));
+    return list
+      .map((item) => this.toFila(item, now))
+      .slice(0, filters.limit ?? DEFAULT_LIST_LIMIT);
   }
 
   async findById(id: string): Promise<Atendimento | null> {

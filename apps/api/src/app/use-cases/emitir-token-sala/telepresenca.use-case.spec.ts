@@ -4,7 +4,6 @@ import { ResgatarLinkPacienteUseCase } from '@/app/use-cases/resgatar-link-pacie
 import {
   buildAtendimento,
   InMemoryAtendimentoRepository,
-  SpyRoomTokenRevoker,
 } from '@/app/use-cases/__tests__/atendimento-test-doubles';
 import { fixedTokenService } from '@/app/use-cases/__tests__/test-doubles';
 import {
@@ -22,7 +21,7 @@ import {
 } from '@/entities/errors/domain-error';
 import { roomNameForAtendimento } from '@/entities/sala';
 import { UserRole } from '@/entities/user-role';
-import { LiveKitRoomTokenRevoker } from '@/externals/telepresenca/livekit-room-token-revoker';
+import { RoomTokenRevoker } from '@/app/contracts/room-token-revoker';
 
 describe('Telepresença use cases', () => {
   const professionalId = 'prof-1';
@@ -155,7 +154,12 @@ describe('Telepresença use cases', () => {
       expiresAt: new Date(Date.now() + 60_000),
       createdByUserId: professionalId,
     });
-    const revoker = new LiveKitRoomTokenRevoker(video, invites);
+    const revoker: RoomTokenRevoker = {
+      async revokeAllForAtendimento(atendimentoId: string): Promise<void> {
+        await invites.revokeAllForAtendimento(atendimentoId, new Date());
+        await video.deleteRoom(roomNameForAtendimento(atendimentoId));
+      },
+    };
     const encerrar = new EncerrarAtendimentoUseCase(atendimentos, revoker);
     await encerrar.execute('at-1', professionalId);
     expect([...invites.items.values()][0]?.revokedAt).not.toBeNull();
@@ -284,11 +288,5 @@ describe('Telepresença use cases', () => {
     await expect(
       finResgatar.execute({ rawToken: 'fin' }),
     ).rejects.toBeInstanceOf(GoneError);
-  });
-
-  it('SpyRoomTokenRevoker ainda funciona nos specs legados', async () => {
-    const spy = new SpyRoomTokenRevoker();
-    await spy.revokeAllForAtendimento('x');
-    expect(spy.revoked).toEqual(['x']);
   });
 });

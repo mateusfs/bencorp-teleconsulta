@@ -54,7 +54,24 @@ export class MemoryProntuarioRepository implements ProntuarioRepository {
 
   update(id: string, input: AtualizarProntuarioInput): Promise<Prontuario> {
     const item = this.store.prontuarios.get(id)!;
-    Object.assign(item, input, { updatedAt: new Date() });
+    if (input.queixa !== undefined) item.queixa = input.queixa;
+    if (input.anamnese !== undefined) item.anamnese = input.anamnese;
+    if (input.conduta !== undefined) item.conduta = input.conduta;
+    if (input.prescricao !== undefined) item.prescricao = input.prescricao;
+    if (input.complementoMedico !== undefined) {
+      item.complementoMedico = input.complementoMedico;
+    }
+    if (input.paSistolica !== undefined) item.paSistolica = input.paSistolica;
+    if (input.paDiastolica !== undefined) {
+      item.paDiastolica = input.paDiastolica;
+    }
+    if (input.fc !== undefined) item.fc = input.fc;
+    if (input.temperatura !== undefined) item.temperatura = input.temperatura;
+    if (input.spo2 !== undefined) item.spo2 = input.spo2;
+    if (input.riskClassification !== undefined) {
+      item.riskClassification = input.riskClassification;
+    }
+    item.updatedAt = new Date();
     this.store.markDirty();
     return Promise.resolve(this.clone(item));
   }

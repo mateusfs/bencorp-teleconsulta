@@ -7,6 +7,7 @@ import {
   PACIENTE_REPOSITORY,
   PacienteComHistorico,
   PacienteRepository,
+  toProntuarioHistoricoResumo,
 } from '@/app/contracts/paciente.repository';
 import { ForbiddenError, NotFoundError } from '@/entities/errors/domain-error';
 import { isClinicalRole, UserRole } from '@/entities/user-role';
@@ -39,19 +40,21 @@ export class ObterPacienteDetalheUseCase {
       input.patientId,
     );
 
-    for (const prontuario of historico.prontuarios) {
-      await this.auditorias.register({
-        prontuarioId: prontuario.id,
-        patientId: paciente.id,
-        userId: input.userId,
-        endpoint: input.endpoint,
-      });
-    }
+    await Promise.all(
+      historico.prontuarios.map((prontuario) =>
+        this.auditorias.register({
+          prontuarioId: prontuario.id,
+          patientId: paciente.id,
+          userId: input.userId,
+          endpoint: input.endpoint,
+        }),
+      ),
+    );
 
     return {
       paciente,
       atendimentos: historico.atendimentos,
-      prontuarios: historico.prontuarios,
+      prontuarios: historico.prontuarios.map(toProntuarioHistoricoResumo),
     };
   }
 }
