@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+**/coverage
+.git
+.tmp
+.cursor
+*.log
+.env
+.env.local
+apps/web/dist
+apps/api/dist
+**/*.tsbuildinfo

@@ -74,6 +74,23 @@ describe('Encerrar e Encaminhar', () => {
     );
   });
 
+  it('impede encaminhar por profissional que não é o dono', async () => {
+    const repo = new InMemoryAtendimentoRepository();
+    const item = buildAtendimento({
+      status: AtendimentoStatus.EM_ANDAMENTO,
+      professionalId,
+    });
+    repo.seed(item);
+    const useCase = new EncaminharAtendimentoMedicoUseCase(
+      repo,
+      new SpyRoomTokenRevoker(),
+    );
+
+    await expect(useCase.execute(item.id, 'outro')).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+  });
+
   it('filtro encaminhadosOnly só para MEDICO', async () => {
     const repo = new InMemoryAtendimentoRepository();
     const useCase = new ListarFilaAtendimentoUseCase(repo);

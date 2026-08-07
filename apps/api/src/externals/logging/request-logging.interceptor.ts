@@ -9,6 +9,7 @@ import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { Observable, tap } from 'rxjs';
 import { AuthPrincipal } from '@/externals/nest/security/authenticated-user';
+import { redactSensitivePath } from '@/externals/logging/redact-sensitive-path';
 
 type RequestWithUser = Request & {
   user?: AuthPrincipal;
@@ -41,7 +42,7 @@ export class RequestLoggingInterceptor implements NestInterceptor {
           JSON.stringify({
             requestId,
             method: request.method,
-            path: request.path,
+            path: redactSensitivePath(request.path),
             statusCode: response.statusCode,
             durationMs: Date.now() - started,
             userId: userId ?? null,

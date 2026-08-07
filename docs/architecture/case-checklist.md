@@ -391,11 +391,11 @@ Cada item traz **Aceite** mensurável.
 
 ### Épico H — Entrega GitHub (obrigatório do PDF)
 
-- [ ] **CX-100** — `README.md` com passo a passo local e Docker
+- [x] **CX-100** — `README.md` com passo a passo local e Docker
   - **Aceite:** avaliador sobe o projeto só com o README
   - **BC:** transversal
 
-- [ ] **CX-101** — Estrutura de pastas clara e organizada
+- [x] **CX-101** — Estrutura de pastas clara e organizada
   - **Aceite:** API layer-first + BCs por subpasta; web e docs óbvios no README; conforme [api-clean-architecture.md](./api-clean-architecture.md)
   - **BC:** transversal
 
@@ -403,21 +403,22 @@ Cada item traz **Aceite** mensurável.
   - **Aceite:** pasta `docs/architecture/adrs/` (ou equivalente) com decisões de stack, concorrência, vídeo, authz
   - **BC:** transversal
 
-- [ ] **CX-103** — `Dockerfile` funcional (api e/ou web conforme Compose)
+- [x] **CX-103** — `Dockerfile` funcional (api e/ou web conforme Compose)
   - **Aceite:** build de imagem sem erro; serviço sobe no Compose
   - **BC:** transversal
 
-- [ ] **CX-104** — Documento de limitações técnicas e abordagem escolhida
+- [x] **CX-104** — Documento de limitações técnicas e abordagem escolhida
   - **Aceite:** limitações explícitas (ex.: PWA mínima, escopo de prontuário, LiveKit self-host)
   - **BC:** transversal
 
-- [ ] **CX-105** — Justificativa de uso de IA (permitido pelo case)
+- [x] **CX-105** — Justificativa de uso de IA (permitido pelo case)
   - **Aceite:** seção no README/docs explicando onde a IA ajudou e o domínio das decisões
   - **BC:** transversal
 
 - [ ] **CX-106** — Repositório publicado / entregue até 10/08/2026
   - **Aceite:** material devolvido no prazo do processo seletivo
   - **BC:** transversal
+  - **Nota:** código em `mateusfs/bencorp-teleconsulta`; envio formal ao processo fica com o candidato
 
 ---
 
@@ -598,9 +599,9 @@ sequenceDiagram
 | E Telepresença | CX-060–CX-071 (12) | 12 |
 | F Pacientes | CX-080–CX-085 (6) | 6 |
 | G PWA & Qualidade | CX-090–CX-094 (5) | 5 |
-| H Entrega | CX-100–CX-106 (7) | 1 |
+| H Entrega | CX-100–CX-106 (7) | 6 |
 | I Memória / demo | CX-110–CX-116 (7) | 7 |
-| **Total** | **82** | **76** |
+| **Total** | **82** | **81** |
 
 Atualizar checkboxes e a coluna “Feitos” conforme a implementação avançar item a item.
 

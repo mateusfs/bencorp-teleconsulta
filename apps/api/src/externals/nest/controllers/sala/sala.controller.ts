@@ -12,6 +12,7 @@ import { EmitirTokenSalaUseCase } from '@/app/use-cases/emitir-token-sala';
 import { ListarMensagensChatUseCase } from '@/app/use-cases/chat-sala';
 import { ResgatarLinkPacienteUseCase } from '@/app/use-cases/resgatar-link-paciente';
 import { UserRole } from '@/entities/user-role';
+import { ResgatarLinkDto } from '@/externals/nest/pipes/sala/sala.dto';
 import { AuthenticatedUser } from '@/externals/nest/security/authenticated-user';
 import { CurrentUser } from '@/externals/nest/security/current-user.decorator';
 import { JwtAuthGuard } from '@/externals/nest/security/jwt-auth.guard';
@@ -56,13 +57,10 @@ export class SalaController {
   }
 
   @Post('sala/links/:token/resgatar')
-  resgatar(
-    @Param('token') token: string,
-    @Body() body?: { atendimentoId?: string },
-  ) {
+  resgatar(@Param('token') token: string, @Body() body: ResgatarLinkDto) {
     return this.resgatarLink.execute({
       rawToken: token,
-      expectedAtendimentoId: body?.atendimentoId,
+      expectedAtendimentoId: body.atendimentoId,
     });
   }
 
