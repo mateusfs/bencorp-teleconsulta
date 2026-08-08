@@ -2,6 +2,7 @@ import { UnprocessableStateError } from '@/entities/errors/domain-error';
 
 export const ROOM_TOKEN_TTL_SECONDS = 15 * 60;
 export const PATIENT_INVITE_TTL_SECONDS = 60 * 60;
+export const CHAT_MESSAGE_MAX_LENGTH = 4000;
 
 export function roomNameForAtendimento(atendimentoId: string): string {
   return `atendimento-${atendimentoId}`;

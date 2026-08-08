@@ -50,6 +50,7 @@ export class AtendimentosController {
       status: query.status,
       periodo: query.periodo ?? 'TODOS',
       encaminhadosOnly: query.encaminhadosOnly === 'true',
+      omitPatientPii: query.slim === 'true',
     });
   }
 

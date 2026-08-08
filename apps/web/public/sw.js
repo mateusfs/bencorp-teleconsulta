@@ -1,4 +1,4 @@
-const CACHE = 'bencorp-shell-v2';
+const CACHE = 'bencorp-shell-v3';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -15,6 +15,17 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function shouldBypass(url) {
+  if (url.pathname.startsWith('/@')) return true;
+  if (url.pathname.startsWith('/src/')) return true;
+  if (url.pathname.startsWith('/node_modules/')) return true;
+  if (url.pathname.includes('socket.io')) return true;
+  if (url.pathname.startsWith('/api')) return true;
+  if (url.searchParams.has('import')) return true;
+  if (url.searchParams.has('t')) return true;
+  return false;
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') {
@@ -27,7 +38,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/api') || url.pathname.includes('socket.io')) {
+  if (shouldBypass(url)) {
     return;
   }
 

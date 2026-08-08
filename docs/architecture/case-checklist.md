@@ -39,9 +39,9 @@ Requisitos transversais:
 
 | Perfil | Capacidades | Itens |
 | --- | --- | --- |
-| ENFERMEIRO | Fila PAD, iniciar atendimento, triagem, encaminhar ao médico | CX-020–CX-038, CX-040–CX-049 |
-| MEDICO | Fila PAD, ver encaminhados, prescrição, completar prontuário | CX-020–CX-038, CX-040–CX-049 |
-| ADMIN | Gerenciar usuários e papéis (RBAC); **sem** acesso a prontuário | CX-010–CX-016, CX-049 |
+| ENFERMEIRO | Home operacional, fila PAD, iniciar atendimento, triagem, encaminhar ao médico | CX-020–CX-038, CX-040–CX-049, CX-120–CX-126 |
+| MEDICO | Home operacional, fila PAD, ver encaminhados, prescrição, completar prontuário | CX-020–CX-038, CX-040–CX-049, CX-120–CX-126 |
+| ADMIN | Gerenciar usuários e papéis (RBAC); **sem** acesso a prontuário / home clínica | CX-010–CX-016, CX-049, CX-125 |
 | PACIENTE | Sem login; entra na sala via link temporário | CX-060–CX-066, CX-071 |
 
 Bounded contexts de referência: `IdentityAccess` · `Atendimento` · `Prontuario` · `Paciente` · `Telepresenca` · `Auditoria`.
@@ -447,11 +447,52 @@ Cada item traz **Aceite** mensurável.
   - **BC:** transversal
 
 - [x] **CX-115** — Health/UI mostram o modo ativo
-  - **Aceite:** `GET /health` expõe `persistenceMode`; web exibe indicador na home
+  - **Aceite:** `GET /health` expõe `persistenceMode`; web exibe indicador na home (reposicionado como meta no Épico J / CX-125)
   - **BC:** transversal
 
 - [x] **CX-116** — Limitações documentadas (volátil, sem HA, LiveKit opcional)
   - **Aceite:** README/ADR deixam claro que memória é para demo local; produção usa `postgres`
+  - **BC:** transversal
+
+---
+
+### Épico J — Home clínica operacional (dashboard)
+
+Melhoria de produto pós-core: a home de ENFERMEIRO/MEDICO deixa de ser só links + modo de persistência e vira **cockpit** (próxima ação, snapshot da fila, retomar sala). Spec: [epics/CX-EJ](./epics/CX-EJ/README.md).
+
+- [x] **CX-120** — Layout de home clínica (cockpit)
+  - **Tipo:** Frontend
+  - **Aceite:** ENFERMEIRO/MEDICO em `/` veem header + seções operacionais (ações / fila / esperas), não apenas lista de links
+  - **BC:** Atendimento (UI)
+
+- [x] **CX-121** — Snapshot da fila na home
+  - **Tipo:** Frontend
+  - **Aceite:** Contagens `AGUARDANDO` / `EM_ANDAMENTO` / `FINALIZADO` (e encaminhados para MEDICO) a partir da listagem autorizada; número + texto (não só cor)
+  - **BC:** Atendimento
+
+- [x] **CX-122** — CTAs por papel
+  - **Tipo:** Frontend
+  - **Aceite:** ENFERMEIRO → CTA primário Fila; MEDICO → Encaminhados/Fila; atalho Pacientes; alvos ≥44px
+  - **BC:** Atendimento / Paciente (UI)
+
+- [x] **CX-123** — Retomar atendimento em andamento
+  - **Tipo:** Frontend
+  - **Aceite:** Se houver `EM_ANDAMENTO` do profissional logado, CTA “Retomar sala” → `/atendimentos/:id`
+  - **BC:** Atendimento / Telepresenca (navegação)
+
+- [x] **CX-124** — Maiores esperas (lista curta)
+  - **Tipo:** Frontend
+  - **Aceite:** Até 5 `AGUARDANDO` por tempo de espera (maior primeiro), com nome, risco rotulado e link para fila/detalhe
+  - **BC:** Atendimento
+
+- [x] **CX-125** — Persistência secundária + ADMIN sem clínico
+  - **Tipo:** Frontend
+  - **Aceite:** Badge `/health` não é hero; ADMIN sem snapshot/fila/pacientes na home
+  - **BC:** IdentityAccess / transversal
+
+- [x] **CX-126** — A11y e estados da home
+  - **Tipo:** Frontend / Qualidade
+  - **Aceite:** loading/empty/error explícitos; erro com `role="alert"`; focus visível; sem emoji como ícone
   - **BC:** transversal
 
 ---
@@ -472,6 +513,7 @@ Prioridade: **regras de backend e authz** antes de polir UI.
 | 8 | PWA + testes de qualidade | CX-090–CX-094 |
 | 9 | Empacotar entrega | CX-100–CX-106 |
 | 10 | Memória local / demo sem DB | CX-110–CX-116 |
+| 11 | Home clínica operacional | CX-120–CX-126 |
 
 Fluxos principais:
 
@@ -586,6 +628,18 @@ sequenceDiagram
 | Histórico de atendimentos | CX-082 |
 | Sinais vitais / prontuários anteriores | CX-083, CX-084 |
 
+### 6.4 Home clínica (ENFERMEIRO / MEDICO)
+
+| Elemento | Item |
+| --- | --- |
+| Header identidade + sair | CX-120 |
+| CTAs por papel / retomar sala | CX-122, CX-123 |
+| Contagens da fila | CX-121 |
+| Maiores esperas | CX-124 |
+| Badge persistência (secundário) | CX-125, CX-115 |
+| ADMIN sem painel clínico | CX-125 |
+| Loading / empty / error a11y | CX-126 |
+
 ---
 
 ## 7. Contagem e progresso
@@ -601,7 +655,8 @@ sequenceDiagram
 | G PWA & Qualidade | CX-090–CX-094 (5) | 5 |
 | H Entrega | CX-100–CX-106 (7) | 6 |
 | I Memória / demo | CX-110–CX-116 (7) | 7 |
-| **Total** | **82** | **81** |
+| J Home clínica | CX-120–CX-126 (7) | 7 |
+| **Total** | **89** | **88** |
 
 Atualizar checkboxes e a coluna “Feitos” conforme a implementação avançar item a item.
 

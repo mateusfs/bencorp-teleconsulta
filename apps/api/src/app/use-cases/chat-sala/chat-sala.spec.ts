@@ -77,12 +77,21 @@ describe('Chat sala use cases', () => {
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
-  it('recusa mensagem vazia e mismatch de atendimento do paciente', async () => {
+  it('recusa mensagem vazia, longa demais e mismatch do paciente', async () => {
     const { enviar } = setup();
     await expect(
       enviar.execute({
         atendimentoId: 'at-1',
         body: '   ',
+        professionalUserId: 'prof-1',
+        role: UserRole.MEDICO,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    await expect(
+      enviar.execute({
+        atendimentoId: 'at-1',
+        body: 'x'.repeat(4001),
         professionalUserId: 'prof-1',
         role: UserRole.MEDICO,
       }),
@@ -97,7 +106,7 @@ describe('Chat sala use cases', () => {
     ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
-  it('recusa chat fora de EM_ANDAMENTO', async () => {
+  it('recusa chat fora de EM_ANDAMENTO no enviar e no listar', async () => {
     const atendimentos = new InMemoryAtendimentoRepository();
     atendimentos.seed(
       buildAtendimento({
@@ -106,16 +115,23 @@ describe('Chat sala use cases', () => {
         professionalId: 'prof-1',
       }),
     );
-    const enviar = new EnviarMensagemChatUseCase(
-      atendimentos,
-      new InMemoryChatMessageRepository(),
-    );
+    const messages = new InMemoryChatMessageRepository();
+    const enviar = new EnviarMensagemChatUseCase(atendimentos, messages);
+    const listar = new ListarMensagensChatUseCase(atendimentos, messages);
     await expect(
       enviar.execute({
         atendimentoId: 'at-2',
         body: 'tarde demais',
         professionalUserId: 'prof-1',
         role: UserRole.MEDICO,
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableStateError);
+
+    await expect(
+      listar.execute({
+        atendimentoId: 'at-2',
+        role: UserRole.MEDICO,
+        professionalUserId: 'prof-1',
       }),
     ).rejects.toBeInstanceOf(UnprocessableStateError);
   });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   cancelarAtendimento,
   clearSession,
@@ -15,6 +15,7 @@ import type {
   ClassificacaoRisco,
   PeriodoFila,
 } from '../api';
+import { encaminhadosOnlyFromSearch } from '../homeUi';
 import { labelRisco, labelStatus } from '../labels';
 
 function formatWait(seconds: number): string {
@@ -26,12 +27,15 @@ function formatWait(seconds: number): string {
 export function FilaAtendimentoPage() {
   const me = getStoredUser();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [items, setItems] = useState<AtendimentoFilaItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<AtendimentoStatus | ''>('');
   const [periodo, setPeriodo] = useState<PeriodoFila>('TODOS');
-  const [encaminhadosOnly, setEncaminhadosOnly] = useState(false);
+  const [encaminhadosOnly, setEncaminhadosOnly] = useState(() =>
+    encaminhadosOnlyFromSearch(searchParams),
+  );
   const [patientName, setPatientName] = useState('');
   const [patientCpf, setPatientCpf] = useState('');
   const [patientContact, setPatientContact] = useState('');

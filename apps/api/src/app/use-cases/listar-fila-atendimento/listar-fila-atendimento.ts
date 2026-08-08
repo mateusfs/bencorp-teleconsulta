@@ -25,6 +25,15 @@ export class ListarFilaAtendimentoUseCase {
       );
     }
 
-    return this.atendimentos.listFila(filters);
+    const rows = await this.atendimentos.listFila(filters);
+    if (!filters.omitPatientPii) {
+      return rows;
+    }
+
+    return rows.map((row) => ({
+      ...row,
+      patientCpf: '',
+      patientContact: '',
+    }));
   }
 }

@@ -666,6 +666,242 @@ textarea.field-invalid {
   font-size: 0.9rem;
 }
 
+.btn-primary,
+a.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: #0b6e4f;
+  color: #fff;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.btn-primary:hover,
+a.btn-primary:hover {
+  background: #095c42;
+}
+
+.btn-secondary,
+a.btn-secondary,
+button.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: #e8eef4;
+  color: #164e63;
+  text-decoration: none;
+  border: 1px solid #c5d0db;
+  cursor: pointer;
+  font: inherit;
+}
+
+.btn-secondary:hover,
+a.btn-secondary:hover,
+button.btn-secondary:hover {
+  background: #dce5ee;
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+a.btn-primary:focus-visible,
+a.btn-secondary:focus-visible,
+button.btn-secondary:focus-visible {
+  outline: 3px solid #0891b2;
+  outline-offset: 2px;
+}
+
+.home-clinical {
+  max-width: 880px;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.home-kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b6b7c;
+}
+
+.home-title {
+  margin: 0.2rem 0 0.35rem;
+  font-size: 1.75rem;
+  color: #164e63;
+}
+
+.home-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  margin: 0;
+}
+
+.home-role {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: #ecfeff;
+  color: #164e63;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.home-logout {
+  flex-shrink: 0;
+}
+
+.home-section {
+  background: #fff;
+  border: 1px solid #d7e0ea;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.home-section h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  color: #164e63;
+}
+
+.home-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.home-section-head h2 {
+  margin: 0;
+}
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.home-cta {
+  min-width: 10rem;
+}
+
+.home-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.home-counts li {
+  background: #f7fafc;
+  border: 1px solid #e4ebf2;
+  border-radius: 10px;
+  padding: 0.85rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.home-count-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0b6e4f;
+  line-height: 1.1;
+}
+
+.home-count-label {
+  font-size: 0.88rem;
+  color: #5b6b7c;
+}
+
+.home-wait-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.home-wait-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #e4ebf2;
+  border-radius: 10px;
+  background: #fafcfd;
+}
+
+.home-wait-list li > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.home-wait-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  color: #5b6b7c;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.home-error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.home-error p {
+  margin: 0;
+  color: #a11;
+}
+
+.home-persistence {
+  margin-top: 1.25rem;
+  font-size: 0.82rem;
+  background: #f3f6f9;
+  border-color: #d7e0ea;
+  color: #5b6b7c;
+}
+
+@media (max-width: 640px) {
+  .home-header {
+    flex-direction: column;
+  }
+
+  .home-wait-list li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 960px) {
   .sala-grid,
   .sala-grid.paciente {

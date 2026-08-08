@@ -13,7 +13,7 @@ import {
   EnviarMensagemChatUseCase,
   ListarMensagensChatUseCase,
 } from '@/app/use-cases/chat-sala';
-import { ForbiddenError } from '@/entities/errors/domain-error';
+import { DomainError, ForbiddenError } from '@/entities/errors/domain-error';
 import { UserRole } from '@/entities/user-role';
 
 type SocketAuth = {
@@ -30,6 +30,13 @@ type JwtPayload = {
   email?: string;
   role?: UserRole;
   atendimentoId?: string;
+};
+
+type ChatAck = {
+  ok: boolean;
+  code?: string;
+  message?: string;
+  messages?: unknown[];
 };
 
 @WebSocketGateway({
@@ -68,51 +75,72 @@ export class ChatGateway implements OnGatewayConnection {
   async join(
     @ConnectedSocket() client: Socket,
     @MessageBody() body: { atendimentoId: string },
-  ): Promise<{ ok: boolean; messages: unknown[] }> {
+  ): Promise<ChatAck> {
     const auth = this.authBySocket.get(client);
-    if (!auth || !body.atendimentoId) {
-      return { ok: false, messages: [] };
+    const atendimentoId =
+      typeof body?.atendimentoId === 'string' ? body.atendimentoId.trim() : '';
+    if (!auth || !atendimentoId) {
+      return { ok: false, code: 'VALIDATION', message: 'Dados inválidos' };
     }
 
-    this.assertAccess(auth, body.atendimentoId);
-    await client.join(this.room(body.atendimentoId));
+    try {
+      this.assertAccess(auth, atendimentoId);
 
-    const messages = await this.listar.execute({
-      atendimentoId: body.atendimentoId,
-      role: auth.kind === 'professional' ? auth.role : undefined,
-      professionalUserId:
-        auth.kind === 'professional' ? auth.userId : undefined,
-      patientAtendimentoId:
-        auth.kind === 'patient' ? auth.atendimentoId : undefined,
-    });
+      const messages = await this.listar.execute({
+        atendimentoId,
+        role: auth.kind === 'professional' ? auth.role : undefined,
+        professionalUserId:
+          auth.kind === 'professional' ? auth.userId : undefined,
+        patientAtendimentoId:
+          auth.kind === 'patient' ? auth.atendimentoId : undefined,
+      });
 
-    return { ok: true, messages };
+      await client.join(this.room(atendimentoId));
+      return { ok: true, messages };
+    } catch (error) {
+      return this.toAckError(error);
+    }
   }
 
   @SubscribeMessage('message')
   async message(
     @ConnectedSocket() client: Socket,
     @MessageBody() body: { atendimentoId: string; text: string },
-  ): Promise<{ ok: boolean }> {
+  ): Promise<ChatAck> {
     const auth = this.authBySocket.get(client);
-    if (!auth || !body.atendimentoId) {
-      return { ok: false };
+    const atendimentoId =
+      typeof body?.atendimentoId === 'string' ? body.atendimentoId.trim() : '';
+    const text = typeof body?.text === 'string' ? body.text : '';
+    if (!auth || !atendimentoId) {
+      return { ok: false, code: 'VALIDATION', message: 'Dados inválidos' };
     }
 
-    this.assertAccess(auth, body.atendimentoId);
+    try {
+      this.assertAccess(auth, atendimentoId);
 
-    const saved = await this.enviar.execute({
-      atendimentoId: body.atendimentoId,
-      body: body.text,
-      professionalUserId:
-        auth.kind === 'professional' ? auth.userId : undefined,
-      role: auth.kind === 'professional' ? auth.role : undefined,
-      patientAtendimentoId:
-        auth.kind === 'patient' ? auth.atendimentoId : undefined,
-    });
+      const saved = await this.enviar.execute({
+        atendimentoId,
+        body: text,
+        professionalUserId:
+          auth.kind === 'professional' ? auth.userId : undefined,
+        role: auth.kind === 'professional' ? auth.role : undefined,
+        patientAtendimentoId:
+          auth.kind === 'patient' ? auth.atendimentoId : undefined,
+      });
 
-    this.server.to(this.room(body.atendimentoId)).emit('message', saved);
-    return { ok: true };
+      this.server.to(this.room(atendimentoId)).emit('message', saved);
+      return { ok: true };
+    } catch (error) {
+      return this.toAckError(error);
+    }
+  }
+
+  private toAckError(error: unknown): ChatAck {
+    if (error instanceof DomainError) {
+      return { ok: false, code: error.code, message: error.message };
+    }
+    this.logger.warn(`WS chat erro inesperado: ${String(error)}`);
+    return { ok: false, code: 'INTERNAL', message: 'Erro no chat' };
   }
 
   private readToken(client: Socket): string | undefined {
