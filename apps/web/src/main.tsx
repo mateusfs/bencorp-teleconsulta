@@ -14,10 +14,24 @@ createRoot(root).render(
   </StrictMode>,
 );
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js').catch(() => {
-      /* PWA opcional em dev/http */
+async function clearDevServiceWorkers(): Promise<void> {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(registrations.map((registration) => registration.unregister()));
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => caches.delete(key)));
+  }
+}
+
+if (import.meta.env.PROD) {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
     });
-  });
+  }
+} else {
+  void clearDevServiceWorkers();
 }

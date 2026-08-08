@@ -91,4 +91,19 @@ describe('ListarFilaAtendimentoUseCase filtros', () => {
     const ana = rows.find((r) => r.id === 'hoje-aguardando');
     expect(ana?.tempoEsperaSegundos).toBe(5 * 60 * 60);
   });
+
+  it('omitPatientPii esvazia CPF e contato na resposta', async () => {
+    const useCase = new ListarFilaAtendimentoUseCase(seedRepo());
+    const rows = await useCase.execute(UserRole.ENFERMEIRO, {
+      periodo: 'HOJE',
+      now,
+      omitPatientPii: true,
+    });
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.patientCpf).toBe('');
+      expect(row.patientContact).toBe('');
+      expect(row.patientName.length).toBeGreaterThan(0);
+    }
+  });
 });

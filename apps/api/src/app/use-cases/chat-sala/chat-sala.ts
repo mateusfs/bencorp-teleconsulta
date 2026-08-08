@@ -13,7 +13,11 @@ import {
   NotFoundError,
   ValidationError,
 } from '@/entities/errors/domain-error';
-import { assertRoomActive, ChatMessage } from '@/entities/sala';
+import {
+  assertRoomActive,
+  CHAT_MESSAGE_MAX_LENGTH,
+  ChatMessage,
+} from '@/entities/sala';
 import { isClinicalRole, UserRole } from '@/entities/user-role';
 
 function assertProfessionalOwnsChat(
@@ -28,6 +32,19 @@ function assertProfessionalOwnsChat(
       'Somente o profissional responsável acessa o chat desta sala',
     );
   }
+}
+
+function assertChatBody(body: string): string {
+  const trimmed = body.trim();
+  if (!trimmed) {
+    throw new ValidationError('Mensagem vazia');
+  }
+  if (trimmed.length > CHAT_MESSAGE_MAX_LENGTH) {
+    throw new ValidationError(
+      `Mensagem deve ter no máximo ${CHAT_MESSAGE_MAX_LENGTH} caracteres`,
+    );
+  }
+  return trimmed;
 }
 
 @Injectable()
@@ -84,10 +101,7 @@ export class EnviarMensagemChatUseCase {
     role?: UserRole;
     patientAtendimentoId?: string;
   }): Promise<ChatMessage> {
-    const body = input.body.trim();
-    if (!body) {
-      throw new ValidationError('Mensagem vazia');
-    }
+    const body = assertChatBody(input.body);
 
     if (input.patientAtendimentoId) {
       if (input.patientAtendimentoId !== input.atendimentoId) {

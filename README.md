@@ -11,15 +11,16 @@ Repositório: estrutura monorepo, API NestJS (Clean Architecture layer-first), w
 3. [Demo rápida sem Postgres](#demo-rápida-sem-postgres)
 4. [Desenvolvimento local](#desenvolvimento-local)
 5. [Credenciais do seed](#credenciais-do-seed)
-6. [Estrutura do repositório](#estrutura-do-repositório)
-7. [Scripts](#scripts)
-8. [Documentação](#documentação)
-9. [Limitações](#limitações)
-10. [Uso de IA](#uso-de-ia)
+6. [Tour da UI — fluxo clínico](#tour-da-ui--fluxo-clínico)
+7. [Estrutura do repositório](#estrutura-do-repositório)
+8. [Scripts](#scripts)
+9. [Documentação](#documentação)
+10. [Limitações](#limitações)
+11. [Uso de IA](#uso-de-ia)
 
 ## Pré-requisitos
 
-- Node.js **20+**
+- Node.js **20+** (`nvm use` lê `.nvmrc`)
 - Docker + Docker Compose (stack completa)
 - Git
 
@@ -43,19 +44,17 @@ Parar: `docker compose down` (volume Postgres persiste; `down -v` zera dados).
 
 ## Demo rápida sem Postgres
 
-Persistência em memória + vídeo **LiveKit real** (SFU no Compose). Tokens/sala usam o mesmo `LiveKitVideoRoomProvider` do modo postgres.
+Sem `PERSISTENCE_MODE` no `.env`, a API sonda o `DATABASE_URL`: se o Postgres não responder, sobe em **memory** automaticamente. Vídeo usa LiveKit real (SFU no Compose).
 
 ```bash
 cp .env.example .env
+nvm use
 npm install
 docker compose up -d livekit
-npm run build -w api
-npm run dev:api:memory
+npm run dev:api
 # outro terminal
 npm run dev:web
 ```
-
-Atalho (API memory + Vite + LiveKit): `npm run dev:memory`.
 
 - Seed em memória (mesmos usuários da tabela abaixo)
 - Badge na Home: **Persistência: memory**
@@ -63,6 +62,7 @@ Atalho (API memory + Vite + LiveKit): `npm run dev:memory`.
 
 | `PERSISTENCE_MODE` | Comportamento |
 | --- | --- |
+| *(omitido)* | Postgres se a porta do `DATABASE_URL` responder; senão `memory` |
 | `postgres` | Prisma + PostgreSQL (entrega / Compose) |
 | `memory` | Só memória + LiveKit |
 | `write-behind` | Memória na request + flush best-effort + LiveKit |
@@ -73,14 +73,19 @@ Detalhes: [ADR-002](docs/architecture/adrs/002-persistencia-memoria-write-behind
 
 ```bash
 cp .env.example .env
+nvm use
 docker compose up -d postgres livekit
 npm install
-cd apps/api && npx prisma migrate deploy && npx prisma db seed && npm run start:dev
+cd apps/api && npx prisma migrate deploy && npx prisma db seed
+# na raiz
+npm run dev:api
 # outro terminal
-cd apps/web && npm run dev
+npm run dev:web
 ```
 
-Fluxo clínico resumido: login → fila → iniciar atendimento → sala (vídeo/chat/prontuário) → copiar link do paciente → finalizar (encerrar ou encaminhar). Pacientes em `/pacientes` (ENFERMEIRO/MEDICO).
+Com Postgres no ar e sem `PERSISTENCE_MODE`, a API escolhe `postgres` sozinha. Para forçar memória: `PERSISTENCE_MODE=memory`.
+
+Fluxo clínico: ver [Tour da UI](#tour-da-ui--fluxo-clínico). Pacientes em `/pacientes` (ENFERMEIRO/MEDICO).
 
 ## Credenciais do seed
 
@@ -92,6 +97,34 @@ Fluxo clínico resumido: login → fila → iniciar atendimento → sala (vídeo
 
 Paciente **não** tem login — entra em `/paciente/sala/:token` via link gerado na sala.
 
+## Tour da UI — fluxo clínico
+
+Fluxo resumido: **login** → **painel** → **fila** → **iniciar** → **sala** (vídeo + chat + prontuário) → **link do paciente** → encerrar ou encaminhar.
+
+### 1. Painel clínico (ENFERMEIRO / MEDICO)
+
+Home operacional após o login: próximas ações, contagens da fila e maiores esperas. Badge de persistência fica no rodapé.
+
+<img src="./img/painel_clinico.png" alt="Painel clínico — BenCorp PAD" width="900" />
+
+### 2. Fila de Pronto Atendimento
+
+Filtros, nova solicitação e tabela com risco, status, espera e ações (Iniciar / Cancelar / Ver).
+
+<img src="./img/fila_pronto_atendimento.png" alt="Fila de Pronto Atendimento" width="900" />
+
+### 3. Sala de atendimento (profissional)
+
+Três painéis: **vídeo** (LiveKit), **chat** e **prontuário** (triagem / vitais). Cabeçalho com status, risco, link do paciente e ações de encerrar/encaminhar.
+
+<img src="./img/sala_atendimento.png" alt="Sala de atendimento — profissional" width="900" />
+
+### 4. Sala do paciente (sem login)
+
+Acesso só pelo link temporário (uso único). Vídeo + chat; sem prontuário nem gestão clínica.
+
+<img src="./img/sala_paciente.png" alt="Sala do paciente — acesso por link" width="900" />
+
 ## Estrutura do repositório
 
 ```text
@@ -100,6 +133,7 @@ apps/api/src/
   entities/     domínio puro (sem Nest/Prisma)
   externals/    Nest, Prisma, LiveKit, memória, JWT
 apps/web/       React + Vite (+ PWA shell)
+img/            capturas do fluxo clínico (README)
 docs/architecture/
   case-checklist.md
   api-clean-architecture.md
@@ -110,7 +144,7 @@ docs/architecture/
 docker-compose.yml
 ```
 
-Imports da API: `@/*` → `src/*`. Guia: [api-clean-architecture.md](docs/architecture/api-clean-architecture.md).
+Imports da API: `@/*` → `src/*` (build reescreve aliases no `dist`; `start:dev`/`start:prod` também registram `@/` via `apps/api/scripts/register-path-aliases.cjs`). Guia: [api-clean-architecture.md](docs/architecture/api-clean-architecture.md).
 
 Dockerfiles: `apps/api/Dockerfile`, `apps/web/Dockerfile` (nginx serve o build estático).
 
@@ -120,9 +154,8 @@ Na raiz do monorepo:
 
 | Script | Descrição |
 | --- | --- |
-| `npm run dev:api` / `dev:web` | Desenvolvimento |
-| `npm run dev:api:memory` | API em memória + env LiveKit/JWT |
-| `npm run dev:memory` | Script: LiveKit + API memory + Vite |
+| `npm run dev:api` / `dev:web` | Desenvolvimento (API auto memory/postgres) |
+| `VITE_DEV_HOST=0.0.0.0 npm run dev:web` | Vite escuta na LAN; HMR aponta para `localhost` |
 | `npm test` / `npm run test:cov` | Testes da API + cobertura |
 | `npm run lint` | ESLint da API |
 | `npm run build` | Build API + web |

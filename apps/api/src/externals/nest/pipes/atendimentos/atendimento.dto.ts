@@ -27,6 +27,10 @@ export class ListarFilaQueryDto {
   @IsOptional()
   @IsBooleanString()
   encaminhadosOnly?: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  slim?: string;
 }
 
 export class CriarSolicitacaoDto {

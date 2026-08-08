@@ -14,6 +14,7 @@ export type ListarFilaFilters = {
   status?: AtendimentoStatus;
   periodo?: PeriodoFila;
   encaminhadosOnly?: boolean;
+  omitPatientPii?: boolean;
   now?: Date;
   limit?: number;
 };

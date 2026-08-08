@@ -4,7 +4,9 @@ import {
   collectVitalErrors,
   isProntuarioComplete,
   missingProntuarioFields,
+  parseApiFieldErrors,
   parseRiskClassification,
+  toVitalPayload,
   vitalFieldError,
 } from './prontuarioCompleteness';
 
@@ -65,5 +67,36 @@ describe('prontuarioCompleteness', () => {
   it('parseRiskClassification só aceita enum conhecido', () => {
     expect(parseRiskClassification('VERMELHO')).toBe('VERMELHO');
     expect(parseRiskClassification('roxo')).toBeNull();
+  });
+
+  it('parseApiFieldErrors traduz mensagens de validação', () => {
+    expect(
+      parseApiFieldErrors(
+        'paSistolica must not be greater than 300, spo2 não deve ser menor que 50',
+      ),
+    ).toEqual({
+      paSistolica: 'PA sistólica deve ser no máximo 300',
+      spo2: 'SpO₂ deve ser no mínimo 50',
+    });
+  });
+
+  it('toVitalPayload normaliza números', () => {
+    expect(
+      toVitalPayload(
+        baseProntuario({
+          paSistolica: 120.4,
+          paDiastolica: 80.6,
+          fc: 70.2,
+          temperatura: 36.58,
+          spo2: 98.1,
+        }),
+      ),
+    ).toEqual({
+      paSistolica: 120,
+      paDiastolica: 81,
+      fc: 70,
+      temperatura: 36.6,
+      spo2: 98,
+    });
   });
 });

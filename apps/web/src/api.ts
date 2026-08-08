@@ -149,6 +149,7 @@ export type ListarFilaParams = {
   status?: AtendimentoStatus | '';
   periodo?: PeriodoFila;
   encaminhadosOnly?: boolean;
+  slim?: boolean;
 };
 
 function toQuery(params: ListarFilaParams): string {
@@ -157,6 +158,7 @@ function toQuery(params: ListarFilaParams): string {
   if (params.status) search.set('status', params.status);
   if (params.periodo) search.set('periodo', params.periodo);
   if (params.encaminhadosOnly) search.set('encaminhadosOnly', 'true');
+  if (params.slim) search.set('slim', 'true');
   const qs = search.toString();
   return qs ? `?${qs}` : '';
 }
