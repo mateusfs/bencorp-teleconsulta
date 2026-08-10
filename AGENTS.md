@@ -81,7 +81,7 @@ Preferir testes de entities/use-cases com ports em memória (sem Nest/DB).
 
 ## 10. Entrega
 
-README com local + Docker; ADRs/trade-offs; Dockerfile; limitações e uso de IA documentados (épico H).
+README com local + Docker; ADRs/trade-offs; Dockerfile; limitações documentadas (épico H).
 
 ## 11. Definition of Done (épico)
 

@@ -24,7 +24,8 @@ Ports (`*Repository`) permanecem iguais; só o composition root escolhe o adapte
 ## Consequências
 
 - Demo local: `npm run dev:api` sem Postgres sobe em memória; com Postgres no ar usa Prisma.
-- O bootstrap chama `ensurePersistenceMode` **antes** do `import()` dinâmico do `AppModule`, para o composition root (`buildPersistenceProviders`) ler o modo já resolvido.
+- O bootstrap chama `ensurePersistenceMode` **antes** do `import()` relativo do `AppModule` (`./externals/nest/module`), para o composition root (`buildPersistenceProviders`) ler o modo já resolvido.
+- Em runtime local, `start` / `start:dev` / `start:prod` registram o alias `@/` via `scripts/register-path-aliases.cjs`; o build de produção também reescreve `require`/`from` no `dist` com `rewrite-path-aliases.mjs`.
 - Compose continua com `PERSISTENCE_MODE=postgres` explícito.
 - Dados em memória são voláteis (reinício zera o estado).
 - Write-behind não garante durabilidade se o processo cair antes do flush.

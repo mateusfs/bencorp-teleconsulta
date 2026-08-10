@@ -411,8 +411,8 @@ Cada item traz **Aceite** mensurável.
   - **Aceite:** limitações explícitas (ex.: PWA mínima, escopo de prontuário, LiveKit self-host)
   - **BC:** transversal
 
-- [x] **CX-105** — Justificativa de uso de IA (permitido pelo case)
-  - **Aceite:** seção no README/docs explicando onde a IA ajudou e o domínio das decisões
+- [x] **CX-105** — Nota de assistência à codificação (permitido pelo case)
+  - **Aceite:** menção objetiva em `limitacoes-e-abordagem.md` (sem seção promocional no README)
   - **BC:** transversal
 
 - [ ] **CX-106** — Repositório publicado / entregue até 10/08/2026
@@ -584,7 +584,7 @@ sequenceDiagram
 | Link uso único + outro atendimento → 403 | CX-063, CX-064 | Telepresenca |
 | Stack Nest/Express + TS + ORM + PG + JWT + React + Docker + vídeo | CX-001–CX-006, CX-067, CX-103 | transversal |
 | Clean Architecture layer-first na API | CX-001, CX-003, CX-004, CX-101 | transversal |
-| README, ADRs, Dockerfile, limitações, IA | CX-100–CX-105 | transversal |
+| README, ADRs, Dockerfile, limitações | CX-100–CX-105 | transversal |
 | Prazo devolução 10/08/2026 | CX-106 | transversal |
 
 ---

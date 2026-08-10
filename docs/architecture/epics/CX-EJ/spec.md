@@ -26,9 +26,9 @@ A home (`/`) pós-login é o ponto de entrada diário do profissional. Hoje é u
 
 ## Must-not
 
-- ADMIN não consome listagem clínica na home.
 - Home não é fonte de verdade de authz (API continua gate).
-- Não logar CPF/prontuário na home.
+- Não expor CPF/contato na home (`slim=true` + projeção local).
+- ADMIN não consome listagem clínica na home.
 
 ## Dependências
 

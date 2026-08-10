@@ -1,10 +1,10 @@
 # Análise de Domínio — Case BenCorp Teleconsulta (PAD)
 
 - **Fonte:** CASE TÉCNICO – DEV FULLSTACK SÊNIOR – BENCORP (PDF)
-- **Espaço analisado:** problem space (ainda sem codebase)
-- **Método:** DDD Strategic Design — subdomínios (Core / Supporting / Generic) + Bounded Contexts
-- **Data:** 2026-08-07
-- **Status:** Proposto — insumo para ADR/TDD da fase de arquitetura
+- **Espaço:** problem space alinhado à implementação em `apps/api` / `apps/web`
+- **Método:** DDD Strategic Design — subdomínios + Bounded Contexts
+- **Atualizado:** 2026-08-10 (inclui home clínica / Épico J)
+- **Status:** Aceito como linguagem do repositório
 
 ---
 
@@ -25,6 +25,7 @@ O diferencial competitivo do case (e do produto real análogo) não é o vídeo 
 | **Profissional** | Usuário autenticado com papel `ENFERMEIRO` ou `MEDICO` |
 | **Paciente** | Pessoa atendida; **não possui login**; entra na sala por link temporário |
 | **Fila** | Visão operacional dos atendimentos com filtros (nome/CPF, status, período) |
+| **Painel clínico (home)** | Cockpit pós-login do profissional: próximas ações, contagens da fila do dia, maiores esperas, retomar sala |
 | **Classificação de risco** | Atributo clínico/operacional exibido na fila |
 | **Triagem** | Avaliação inicial feita pelo enfermeiro; pode resultar em encaminhamento ao médico |
 | **Encaminhar ao médico** | Desfecho intermediário do enfermeiro que disponibiliza o caso ao médico |

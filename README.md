@@ -16,7 +16,6 @@ Repositório: estrutura monorepo, API NestJS (Clean Architecture layer-first), w
 8. [Scripts](#scripts)
 9. [Documentação](#documentação)
 10. [Limitações](#limitações)
-11. [Uso de IA](#uso-de-ia)
 
 ## Pré-requisitos
 
@@ -139,12 +138,12 @@ docs/architecture/
   api-clean-architecture.md
   domain-analysis.md
   limitacoes-e-abordagem.md
-  uso-de-ia.md
+  epics/CX-EJ/   # home clínica (Épico J)
   adrs/
 docker-compose.yml
 ```
 
-Imports da API: `@/*` → `src/*` (build reescreve aliases no `dist`; `start:dev`/`start:prod` também registram `@/` via `apps/api/scripts/register-path-aliases.cjs`). Guia: [api-clean-architecture.md](docs/architecture/api-clean-architecture.md).
+Imports da API: `@/*` → `src/*` (build reescreve aliases no `dist`; runtime de dev/prod também registra `@/` via `apps/api/scripts/register-path-aliases.cjs`). O bootstrap usa `import()` relativo do `AppModule` após `ensurePersistenceMode`. Guia: [api-clean-architecture.md](docs/architecture/api-clean-architecture.md).
 
 Dockerfiles: `apps/api/Dockerfile`, `apps/web/Dockerfile` (nginx serve o build estático).
 
@@ -164,21 +163,19 @@ Na raiz do monorepo:
 
 - Checklist CX: [docs/architecture/case-checklist.md](docs/architecture/case-checklist.md)
 - Domínio: [docs/architecture/domain-analysis.md](docs/architecture/domain-analysis.md)
+- Clean Architecture API: [docs/architecture/api-clean-architecture.md](docs/architecture/api-clean-architecture.md)
+- Épico J (home clínica): [docs/architecture/epics/CX-EJ/](docs/architecture/epics/CX-EJ/)
 - ADRs: [docs/architecture/adrs/](docs/architecture/adrs/)
 - Limitações: [docs/architecture/limitacoes-e-abordagem.md](docs/architecture/limitacoes-e-abordagem.md)
-- Uso de IA: [docs/architecture/uso-de-ia.md](docs/architecture/uso-de-ia.md)
 
 ## Limitações
 
 Resumo; detalhes em [limitacoes-e-abordagem.md](docs/architecture/limitacoes-e-abordagem.md).
 
 - JWT no `localStorage` (case; não produção)
-- PWA só cacheia shell — sem PHI/API offline
+- PWA só cacheia shell — sem PHI/API offline; SW só em build de produção
 - LiveKit `--dev` com keys de desenvolvimento
 - Modo `memory` volátil; write-behind sem garantia de durabilidade
+- Home clínica agrega a fila do dia (`slim=true`, sem CPF/contato no payload); não é BI em tempo real
 - React `StrictMode` ativo em dev (efeitos montam 2×); a sala de vídeo trata abort/retry para o LiveKit
 - Sem rate limit / APM avançado
-
-## Uso de IA
-
-Permitido pelo case. Resumo do que a IA acelerou vs. decisões de domínio humanas: [uso-de-ia.md](docs/architecture/uso-de-ia.md).

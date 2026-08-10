@@ -1,53 +1,65 @@
 # Design — Épico J
 
-## Princípios (UI/UX Pro Max)
+## Status de implementação
+
+Entregue em `apps/web` com apoio mínimo na API (`?slim=true` na listagem).
+
+| Peça | Onde |
+| --- | --- |
+| Container | `HomePage.tsx` — health + `listAtendimentos({ periodo: 'HOJE', slim: true })` |
+| Views | `ClinicalHomeView` / `AdminHomeView` |
+| Snapshot puro | `homeSnapshot.ts` + `homeUi.ts` (`toHomeFilaItems`, `persistenceLabel`, `encaminhadosOnlyFromSearch`) |
+| Fila MEDICO | `FilaAtendimentoPage` lê `?encaminhados=1` |
+| API slim | `ListarFilaQueryDto.slim` → `omitPatientPii` no use case (CPF/contato vazios) |
+
+## Princípios (UI)
 
 | Tema | Decisão |
 | --- | --- |
-| Estilo | Accessible & Ethical — foco operacional clínico |
-| Anti-patterns | Neon, purple gradient, motion pesado, cards decorativos sem ação |
-| Tipografia | Preferir stack já do app; se adicionar fonte, Fira Sans (UI) — evitar Inter/Roboto “default AI” só se já não houver sistema |
-| Informação | Uma job por seção: (1) o que fazer agora (2) o que espera (3) atalhos |
-| Cor + texto | Risco/status sempre com **label** (ex. “Vermelho”), nunca só bolinha colorida |
-| React | Dados na página/container; snapshot **derivado no render** a partir de `listAtendimentos` (sem `useEffect` só para filtrar) |
+| Estilo | Cockpit operacional clínico; badge de persistência só no rodapé |
+| Informação | Uma job por seção: (1) agora (2) contagens (3) maiores esperas |
+| Cor + texto | Risco/status com **label** (ex. “Vermelho”) |
+| A11y | loading / empty / `role="alert"` no erro; CTAs ≥44px |
 
-## Composição sugerida (`HomePage` clínica)
+## Composição (`ClinicalHomeView`)
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
 │ BenCorp PAD · {papel}     {email}              [Sair]   │
 ├─────────────────────────────────────────────────────────┤
 │ Agora                                                    │
-│  [Retomar atendimento]  (se houver EM_ANDAMENTO próprio) │
-│  [Ir para a fila] / [Encaminhados]  [Pacientes]          │
+│  [Retomar sala — nome]  (EM_ANDAMENTO do profissional)   │
+│  [Ir para a fila] / [Encaminhados / fila]  [Pacientes]   │
 ├─────────────────────────────────────────────────────────┤
 │ Fila agora                                               │
 │  AGUARDANDO N · EM ANDAMENTO N · FINALIZADOS N           │
-│  (MEDICO: Encaminhados N)                                │
+│  (MEDICO: Encaminhados N via encaminhadoDeId)            │
 ├─────────────────────────────────────────────────────────┤
 │ Maiores esperas (até 5)                                  │
-│  nome · risco · espera · → detalhe/fila                  │
+│  nome · risco · espera · Abrir                           │
 ├─────────────────────────────────────────────────────────┤
-│ Persistência: memory                    (meta, discreto) │
+│ Persistência: …                         (meta, discreto) │
 └─────────────────────────────────────────────────────────┘
 ```
 
+ADMIN: só “Gerenciar usuários” + badge opcional — sem fetch de fila.
+
 ## Dados
 
-- `GET /atendimentos` (filtros mínimos; MEDICO pode 2ª chamada `encaminhadosOnly=true` só para contagem, ou derivar de `encaminhadoDeId` se já vier no item).
+- `GET /atendimentos?periodo=HOJE&slim=true` — uma chamada; contagens e top-5 no cliente.
 - `GET /health` — badge secundário.
-- Sem novo use case na API na 1ª fatia, salvo se a listagem for pesada demais (então `GET /atendimentos/resumo` em fatia 2).
+- Sem endpoint `/resumo` (limitação documentada).
 
 ## Authz UI
 
 | Papel | Home |
 | --- | --- |
 | ENFERMEIRO / MEDICO | Cockpit clínico |
-| ADMIN | Home admin (usuários) — sem fila |
+| ADMIN | Home admin (usuários) — sem fila/pacientes |
 | Sem sessão | `/login` |
 
 ## Referências
 
-- Checklist §6.4 (novo)
+- Checklist §6.4
 - ADR-002 (persistência — só exibição)
 - `AGENTS.md` §4 / §7 (ADMIN sem clínico)
