@@ -109,7 +109,9 @@ import { PrismaUsuarioRepository } from '@/externals/database/prisma/prisma-usua
 | --- | --- |
 | `tsconfig.json` | `paths: { "@/*": ["./src/*"] }` (sem `baseUrl` — preterido no TS 6+) |
 | Jest | `moduleNameMapper`: `"^@/(.*)$"` → `"<rootDir>/$1"` |
-| Build | `tsc` + `scripts/rewrite-path-aliases.mjs` (reescreve `@/` nos `.js` do `dist`) |
+| Build | `tsc` + `scripts/rewrite-path-aliases.mjs` (reescreve `@/` em `from`/`require` no `dist`) |
+| Runtime | `node -r ./scripts/register-path-aliases.cjs` em `start` / `start:dev` / `start:prod` |
+| Bootstrap | `ensurePersistenceMode()` → `import('./externals/nest/module')` (relativo; modo resolvido antes dos providers) |
 
 Relativos (`../`) só entre arquivos irmãos do mesmo feature (ex.: spec ao lado do use case).
 
@@ -169,10 +171,10 @@ Meta: cobertura ≥ 80% nos módulos de regras (checklist CX-091), priorizando e
 | Bounded Context | Onde vive |
 | --- | --- |
 | IdentityAccess | `entities/usuario*`, `app/use-cases/*-usuario*`, `externals/nest/controllers/{auth,users}`, `externals/cryptography` + `database/prisma` |
-| Atendimento | use cases `*-atendimento*`, entities de status/desfecho, controllers `atendimento` |
+| Atendimento | use cases `*-atendimento*`, entities de status/desfecho, controllers `atendimentos`; home web deriva snapshot da listagem |
 | Prontuario | use cases `*-prontuario*`, controllers `prontuarios` |
-| Paciente | `entities/paciente`, use cases futuros |
-| Telepresenca | use cases de sala/token + `externals` de vídeo |
+| Paciente | use cases `listar-pacientes` / `obter-paciente-detalhe`, controllers `pacientes` |
+| Telepresenca | use cases de sala/token/chat + `externals/telepresenca` + `ChatGateway` |
 | Auditoria | use cases + persistence de leitura de prontuário |
 
 Shared kernel mínimo: IDs e erros em `entities/` / `entities/errors`.

@@ -16,8 +16,8 @@ Após o login, ENFERMEIRO/MEDICO caem numa home que só mostra saudação, badge
 - **Produto:** cockpit operacional, não marketing hub nem analytics genérico.
 - **Estilo:** Accessible & Ethical (alto contraste, 16px+, focus rings, alvos ≥44px).
 - **Cores sugeridas (calmas saúde):** primary `#0891B2`, CTA `#059669`, texto `#164E63` — alinhar a tokens já existentes em `App.css` sem tema roxo/neon.
-- **Dados:** derivar snapshot da fila a partir da listagem já autorizada (sem endpoint novo na 1ª entrega).
-- **Must-not:** ADMIN continua sem visão clínica; sem PHI extra além do que a fila já expõe.
+- **Dados:** snapshot da fila via `GET /atendimentos?periodo=HOJE&slim=true` (sem endpoint `/resumo`).
+- **Must-not:** ADMIN continua sem visão clínica; home não traz CPF/contato (`slim` + projeção `toHomeFilaItems`).
 
 ## Fora de escopo
 
